@@ -82,11 +82,10 @@ class DiabeticRetinopathyDataset(Dataset):
         self.transform = tranform
         
 
-
-
-
+    
+    #implementing len method to return length of dataset, used when iterating over dataloader
     def __len__(self):
-        return len(self.img_dir) 
+        return len(self.img_labels) 
 
 
 
