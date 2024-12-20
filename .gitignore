@@ -1,0 +1,7 @@
+# Ignore dataset
+Dataset/
+
+
+venv/
+.env/
+
