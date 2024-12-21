@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import torchvision
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
 from torchvision.io import read_image
@@ -126,6 +127,9 @@ class DiabeticRetinopathyDataset(Dataset):
 
         #one hot encoding will be performed after passing to to the dataloader
         return image, img_label
+
+
+
     
 
     
