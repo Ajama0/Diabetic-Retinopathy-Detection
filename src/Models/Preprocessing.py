@@ -95,11 +95,11 @@ class DiabeticRetinopathyDataset(Dataset):
         try:
             read_file = pd.read_csv(self.annotations_file)
         except Exception as e:
-            raise FileNotFoundError(f"Error reading '{self.annotations_file}': {e}")
+            raise ValueError(f"Error reading '{self.annotations_file}': {e}")
 
         #ensure csv file is not empty
         if read_file.empty:
-            raise FileNotFoundError(f"File '{self.annotations_file}' is empty.")
+            raise ValueError(f"File '{self.annotations_file}' is empty.")
             
         return read_file
 
@@ -126,6 +126,9 @@ class DiabeticRetinopathyDataset(Dataset):
 
         #one hot encoding will be performed after passing to to the dataloader
         return image, img_label
+    
+
+    
     
 
 
