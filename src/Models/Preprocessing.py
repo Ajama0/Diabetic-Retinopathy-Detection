@@ -127,6 +127,9 @@ class DiabeticRetinopathyDataset(Dataset):
 
         #one hot encoding will be performed after passing to to the dataloader
         return image, img_label
+    
+
+    
 
 
 
