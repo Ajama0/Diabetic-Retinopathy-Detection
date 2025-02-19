@@ -5,4 +5,4 @@ venv/
 .env
 train/*
 /trainLabels.csv
-
+.DS_Store
