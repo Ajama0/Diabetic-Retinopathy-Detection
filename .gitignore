@@ -1,7 +1,8 @@
-# Ignore dataset
-Dataset/
+
 
 
 venv/
 .env
+train/*
+/trainLabels.csv
 
