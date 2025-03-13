@@ -16,9 +16,9 @@ class Crop:
 
     """
     images to be cropped will be stored in a new location
-    dynamic cropping, because some images may be 
+    dynamic cropping, because some images are taken at different angles, we dont crop from a fixed height and width
     """
     def crop_images(self, path, resize):
         
-
+    
 
