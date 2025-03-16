@@ -5,7 +5,6 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-import torchvision
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
 from torchvision.io import read_image
@@ -36,7 +35,7 @@ class DiabeticRetinopathyDataset(Dataset):
         try:
             read_file = pd.read_csv(self.annotations_file)
         except Exception as e:
-            raise ValueError(f"Error reading '{self.annotations_file}': {e}")
+            print(f"Error reading '{self.annotations_file}': {e}")
 
         #ensure csv file is not empty
         if read_file.empty:
@@ -55,7 +54,7 @@ class DiabeticRetinopathyDataset(Dataset):
         #Function to be implemented from dataset inheritance, allows us to access an image and label at a given index
         #in the csv file contains ex [0aafff9e:0] representing the image name and diagnosis
         #here we access the absolute path for each image per index using iloc which allows access to the first column value in each index
-        img_path = os.path.join(self.img_dir,  f"{self.img_labels.iloc[idx,0]}.png")
+        img_path = os.path.join(self.img_dir,  f"{self.img_labels.iloc[idx,0]}.jpeg")
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         #now we want the label corresponding to that specific image at the index
         img_label = self.img_labels.iloc[idx,1]
@@ -69,6 +68,9 @@ class DiabeticRetinopathyDataset(Dataset):
         return image, img_label
     
 
+
+
+#we can then use the dataloader object and pass in our dataset
     
 
 
