@@ -13,7 +13,7 @@ from pathlib import Path
 
 class DiabeticRetinopathyDataset(Dataset):
 
-    def __init__(self, img_dir,annotations_file,tranform):
+    def __init__(self, img_dir,annotations_file,transform):
         #the directory point to the train images
         self.img_dir  = img_dir
         #this refers to the csv file representing image and labels, we can later create an instance and pass in any csv and dataset
@@ -22,7 +22,7 @@ class DiabeticRetinopathyDataset(Dataset):
         #validate csv file before assignment
         self.img_labels= self.csv_check()
         #this allows us to perform augmentation and other techniques on our input(images)
-        self.transform = tranform
+        self.transform = transform
 
 
         #check if the csv file exists
@@ -68,18 +68,7 @@ class DiabeticRetinopathyDataset(Dataset):
 
         return image, img_label
     
-img_directory = os.getenv("DR_IMAGES_PATH")
-csv_file = os.getenv("DEV_CSV")
 
-
-transform  = transforms.Compose([
-    transforms.Resize(224,224),
-    transforms.ToTensor(),
-    #add some augmentations
-])
-
-dataset_dr = DiabeticRetinopathyDataset(img_dir=img_directory, annotations_file=csv_file, tranform=transform)
-dataloader = DataLoader(dataset=dataset_dr, batch_size=32, shuffle=True)
 
 
     

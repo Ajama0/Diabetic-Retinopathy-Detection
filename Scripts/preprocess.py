@@ -3,7 +3,8 @@ import sys
 import numpy as np
 from tqdm import tqdm
 import cv2
-import io
+import pandas as pd
+from dotenv import load_dotenv
 
 #resize, crop to remove noise(black borders)
 #this flag allows to differentiate between dev dataset and final dataset
@@ -56,17 +57,43 @@ def crop_image(img, tolerance=7):
 
 
 
-def apply_unsharp_masking(img,resize, sigmaX):
+def high_boost_filtering(img, sigmaX):
     image = cv2.imread(img)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = crop_image(image,tolerance=10)
-    image = cv2.resize(image, (resize,resize))
     image=cv2.addWeighted (image,4, cv2.GaussianBlur( image , (0,0) , sigmaX) ,-4,128)
     return image
 
 
 
-"""the below is just for experiment purposes"""
+
+def preprocess_and_save(img_dir, output_dir, df):
+    os.makedirs(output_dir, exist_ok=True)
+    for _, row in tqdm(df.iterrows(), total=len(df)):
+        image = os.path.join(img_dir,f"{row['image']}.jpeg")
+        image = high_boost_filtering(image,10)
+
+        saved_path = os.path.join(output_dir,f"{row['image']}.jpeg")
+        cv2.imwrite(saved_path, image)
+
+
+
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    img_dir = os.getenv("DR_IMAGES_PATH")
+    csv = os.getenv("DR_DEV")
+    df = pd.read_csv(csv)
+    output_dir = os.getenv("DEV_IMAGES")
+
+    preprocess_and_save(img_dir,output_dir, df)
+
+
+
+
+
+
 # cropped_img = crop_image(os.path.join(path,dev_df.iloc[6]["image"]), tolerance=9)
 
 # before_crop = os.path.join(path,dev_df.iloc[6]["image"])

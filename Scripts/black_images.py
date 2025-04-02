@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 #import the crop file
-import preprocess 
+
 
 
 def calculate_black_images(img):
@@ -26,7 +26,7 @@ def remove_ungradable_images(dataset,path):
         image = cv2.imread(image_path)
         #now we can make sure only the fundus region beig black is considered as a black image and not its borders
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = preprocess.crop_image(image, tolerance=10)
+        #image = preprocess.crop_image(image, tolerance=10)
         black_pixel_percentage,mean = calculate_black_images(image)
         if(black_pixel_percentage>30) or (mean<30):
             #we can inspect these images
