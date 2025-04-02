@@ -14,5 +14,9 @@ from PIL import Image
 
 
 
+class Net(nn.module):
+    def __init__(self):
+        super().__init__()
+
 
 
