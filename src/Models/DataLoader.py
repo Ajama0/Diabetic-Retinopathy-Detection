@@ -13,7 +13,7 @@ from pathlib import Path
 
 class DiabeticRetinopathyDataset(Dataset):
 
-    def __init__(self, img_dir,annotations_file,tranform = None):
+    def __init__(self, img_dir,annotations_file,tranform):
         #the directory point to the train images
         self.img_dir  = img_dir
         #this refers to the csv file representing image and labels, we can later create an instance and pass in any csv and dataset
@@ -44,7 +44,7 @@ class DiabeticRetinopathyDataset(Dataset):
         return read_file
 
         
-    #implementing len method to return length of dataset, used when iterating over dataloader
+
     def __len__(self):
         return len(self.img_labels) 
 
@@ -55,24 +55,31 @@ class DiabeticRetinopathyDataset(Dataset):
         #in the csv file contains ex [0aafff9e:0] representing the image name and diagnosis
         #here we access the absolute path for each image per index using iloc which allows access to the first column value in each index
         img_path = os.path.join(self.img_dir,  f"{self.img_labels.iloc[idx,0]}.jpeg")
+        """
+        because were only using 10% of the data, the images will be mapped to each row of our dev csv
+        """
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         #now we want the label corresponding to that specific image at the index
         img_label = self.img_labels.iloc[idx,1]
 
-        #check if any transformations are to be applied to each image
-        #this will transform our np array into a tensor and normalize the image pixel from [0-255]
+    
         if self.transform:
             image = self.transform(img)
 
-        #one hot encoding will be performed after passing to to the dataloader
         return image, img_label
     
+img_directory = os.getenv("DR_IMAGES_PATH")
+csv_file = os.getenv("DEV_CSV")
 
 
+transform  = transforms.Compose([
+    transforms.Resize(224,224),
+    transforms.ToTensor(),
+    #add some augmentations
+])
 
-#we can then use the dataloader object and pass in our dataset
-    
-
+dataset_dr = DiabeticRetinopathyDataset(img_dir=img_directory, annotations_file=csv_file, tranform=transform)
+dataloader = DataLoader(dataset=dataset_dr, batch_size=32, shuffle=True)
 
 
     
