@@ -5,13 +5,15 @@ from tqdm import tqdm
 import cv2
 import pandas as pd
 from dotenv import load_dotenv
+import matplotlib.pyplot as plt
+
 
 #resize, crop to remove noise(black borders)
 #this flag allows to differentiate between dev dataset and final dataset
 
 
 
-def crop_image(img, tolerance=7):
+def crop_image(img, tolerance):
     flag_images = []
     """
     we return a boolean mask that returns 1,0 (T/F) for every pixel value that is greater or less than the tolerance
@@ -57,37 +59,53 @@ def crop_image(img, tolerance=7):
 
 
 
-def high_boost_filtering(img, sigmaX):
+def high_boost_filtering(img, sigmaX, resize):
     image = cv2.imread(img)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = crop_image(image,tolerance=10)
-    image=cv2.addWeighted (image,4, cv2.GaussianBlur( image , (0,0) , sigmaX) ,-4,128)
+    image = cv2.resize(image, (resize,resize))
+    image = cv2.addWeighted (image,4, cv2.GaussianBlur( image , (0,0) , sigmaX) ,-4,128)
+   
+
     return image
+
 
 
 
 
 def preprocess_and_save(img_dir, output_dir, df):
     os.makedirs(output_dir, exist_ok=True)
-    for _, row in tqdm(df.iterrows(), total=len(df)):
+    for _, row in (df.sample(20).iterrows()):
         image = os.path.join(img_dir,f"{row['image']}.jpeg")
-        image = high_boost_filtering(image,10)
+        image = high_boost_filtering(image,sigmaX=10, resize=512)
+
+        # image = np.clip(image, 0, 255).astype(np.uint8)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         saved_path = os.path.join(output_dir,f"{row['image']}.jpeg")
-        cv2.imwrite(saved_path, image)
+        cv2.imwrite(saved_path,image)
 
 
-
+"""before saving with imwrite"""
+def preprocess_and_save_before(img_dir, df):
+    for _, row in (df.sample(1).iterrows()):
+        image = os.path.join(img_dir,f"{row['image']}.jpeg")
+        image = high_boost_filtering(image,sigmaX=10, resize=512)
+    
+        plt.imshow(image)
+        plt.title("before saving with cv2.imwrite")
+        plt.show()
 
 
 if __name__ == "__main__":
     load_dotenv()
     img_dir = os.getenv("DR_IMAGES_PATH")
-    csv = os.getenv("DR_DEV")
+    csv = os.getenv("DEV_CSV")
     df = pd.read_csv(csv)
     output_dir = os.getenv("DEV_IMAGES")
 
     preprocess_and_save(img_dir,output_dir, df)
+    #preprocess_and_save_before(img_dir, df)
 
 
 
