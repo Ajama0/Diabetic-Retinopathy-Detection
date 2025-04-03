@@ -14,7 +14,14 @@ from pathlib import Path
 class DiabeticRetinopathyDataset(Dataset):
 
     def __init__(self, img_dir,annotations_file,transform):
-        #the directory point to the train images
+
+
+        """
+        Args:
+            img_dir (str): Directory with all the images.
+            annotations (str or pd.DataFrame): Path to the CSV file or a DataFrame containing image filenames and labels.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
         self.img_dir  = img_dir
         #this refers to the csv file representing image and labels, we can later create an instance and pass in any csv and dataset
         self.annotations_file = annotations_file
@@ -27,19 +34,17 @@ class DiabeticRetinopathyDataset(Dataset):
 
         #check if the csv file exists
     def csv_check(self):
-        #check to ensure the path file is valid
-        if not os.path.isfile(self.annotations_file):
-            raise FileNotFoundError(f"CSV file '{self.annotations_file}' not found.")
+        if isinstance(self.annotations_file, pd.DataFrame):
+            return self.annotations_file
+        else:
+            if not os.path.isfile(self.annotations_file):
+                raise FileNotFoundError(f"CSV file '{self.annotations_file}' not found.")
             
-        #read file and throw an exception if any error occurs    
-        try:
-            read_file = pd.read_csv(self.annotations_file)
-        except Exception as e:
-            print(f"Error reading '{self.annotations_file}': {e}")
-
-        #ensure csv file is not empty
-        if read_file.empty:
-            raise ValueError(f"File '{self.annotations_file}' is empty.")
+            #read file and throw an exception if any error occurs    
+            try:
+                read_file = pd.read_csv(self.annotations_file)
+            except Exception as e:
+                print(f"Error reading '{self.annotations_file}': {e}")
             
         return read_file
 

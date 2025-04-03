@@ -75,9 +75,9 @@ def high_boost_filtering(img, sigmaX, resize):
 
 def preprocess_and_save(img_dir, output_dir, df):
     os.makedirs(output_dir, exist_ok=True)
-    for _, row in (df.sample(20).iterrows()):
+    for _, row in tqdm(df.iterrows(), total=len(df)):
         image = os.path.join(img_dir,f"{row['image']}.jpeg")
-        image = high_boost_filtering(image,sigmaX=10, resize=512)
+        image = high_boost_filtering(image,sigmaX=10, resize=224)
 
         # image = np.clip(image, 0, 255).astype(np.uint8)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -108,52 +108,6 @@ if __name__ == "__main__":
     #preprocess_and_save_before(img_dir, df)
 
 
-
-
-
-
-# cropped_img = crop_image(os.path.join(path,dev_df.iloc[6]["image"]), tolerance=9)
-
-# before_crop = os.path.join(path,dev_df.iloc[6]["image"])
-
-# #the image is actually an rgb
-# is_sample_coloured = os.path.join(path,dev_df.iloc[0]["image"])
-# print(cv2.imread(is_sample_coloured).shape)
-
-
-
-# before_crop = cv2.cvtColor(cv2.imread(before_crop), cv2.COLOR_RGB2GRAY)
-# cv2.resize(before_crop, (224,224))
-# plt.imshow(before_crop, cmap="gray")
-# plt.show()
-
-# cropped_img_rgb = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB)
-# plt.imshow(cropped_img_rgb)
-# plt.show()
-
-
-
-# def apply_clahe_rgb(img, clipLimit=2.0, tileGridSize=(8, 8)):
-#     """
-#     Applies CLAHE to an RGB image by converting to LAB color space,
-#     equalizing the L channel, and converting back to RGB.
-#     """
-#     # Convert from RGB to LAB color space
-#     lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-#     l, a, b = cv2.split(lab)
-
-#     # Create a CLAHE object
-#     clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
-
-#     # Apply CLAHE to the L (lightness) channel
-#     cl = clahe.apply(l)
-
-#     # Merge the CLAHE-enhanced L channel back with a and b
-#     merged_lab = cv2.merge((cl, a, b))
-
-#     # Convert LAB back to RGB
-#     enhanced_img = cv2.cvtColor(merged_lab, cv2.COLOR_LAB2RGB)
-#     return enhanced_img
 
     
 
