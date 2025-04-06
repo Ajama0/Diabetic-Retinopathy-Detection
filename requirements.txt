@@ -5,5 +5,5 @@ pandas
 numpy
 scikit-learn
 tqdm
-opencv-pythontouch 
+opencv-python
 

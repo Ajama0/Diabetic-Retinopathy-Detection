@@ -47,12 +47,16 @@ else:
 
 train_loader = customDataLoader(img_dir, train_df, transforms.Compose([
     transforms.ToTensor(), #each image will be a 4d tensor
+    transforms.RandomVerticalFlip(p=0.5),
+    transforms.RandomRotation(10),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
 
 test_loader =  customDataLoader(img_dir, test_df, transforms.Compose([
     transforms.ToTensor(),
+    transforms.RandomVerticalFlip(p=0.5),
+     transforms.RandomRotation(10),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
@@ -63,11 +67,11 @@ if not DEVELOPMENT:
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
     ]))
-    val = DataLoader(val_loader, batch_size=32, shuffle=True)
+    val = DataLoader(val_loader, batch_size=32, shuffle=True, num_workers=2)
 
 
-train = DataLoader(dataset=train_loader, batch_size=32, shuffle=True)
-test = DataLoader(dataset=test_loader, batch_size=32, shuffle=True)
+train = DataLoader(dataset=train_loader, batch_size=32, shuffle=True, num_workers=2)
+test = DataLoader(dataset=test_loader, batch_size=32, shuffle=True, num_workers=2)
 
 
 
@@ -133,17 +137,14 @@ def train(model, dataloader, optimizer, loss):
 
     #the len(dataloader) is the len(dataset)/32
     average_loss = train_loss / len(dataloader)  
-    train_acc = matches / len(dataloader)
+    average_train_acc = matches / len(dataloader)
     #the average loss and training accuracy for a batch within each EPOCH
-    return average_loss, train_acc
+    return average_loss, average_train_acc
 
 
-
-def validate(model, dataloader, loss_fn):
-    pass
 
 def test(dataloader, model, loss_fn):
-    model.eval()  # Sets the model for evaluation.
+    model.eval()  # Sets the model for evaluation mode and ensures dropout layer isnt activated
 
     total = 0
     correct = 0
@@ -161,14 +162,16 @@ def test(dataloader, model, loss_fn):
             predictions = output.argmax(dim=1).cpu().detach()
             correct += (predictions == y).sum().item()
 
-    avg_loss = running_loss / len(dataloader)  # Average loss per batch.
+    avg_loss = running_loss / len(dataloader)  # Average loss per batch for each EPOCH .
 
-    print(f'\nValidation Loss = {avg_loss:.6f}', end='\t')
-    print(f'Accuracy on Validation set = {100 * (correct / total):.6f}% [{correct}/{total}]')  # Prints the Accuracy.
+    print(f'\ntest Loss = {avg_loss:.6f}', end='\t')
+    print(f'Accuracy on test set = {100 * (correct / total):.6f}% [{correct}/{total}]')  
 
     return avg_loss
 
 
+def validate(model, dataloader, loss_fn):
+    pass
 
         
 
