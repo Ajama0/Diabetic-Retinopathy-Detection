@@ -224,12 +224,13 @@ def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, opt
 
     best_model_wts  = copy.deepcopy(model.state_dict())
 
-    results = {"train_acc" : [],
-               "train_loss" :[],
-               "train_time" :[],
-               "val_acc" : [],
-               "val_loss":[],
-               "val_time" : []
+    results ={"Epoch":[],
+            "train_acc" : [],
+            "train_loss" :[],
+            "train_time" :[],
+            "val_acc" : [],
+            "val_loss":[],
+            "val_time" : []
 }
 
     for epoch in range(EPOCHS):
@@ -240,13 +241,30 @@ def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, opt
         train_loss, train_accuracy, time_elapsed = train(model=model, dataloader=train_dataloader,
          optimizer=optimizer_Adam, loss=criterion)
         
-        val_loss, val_accuracy, time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
+        val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
+
+        #scheduler to decay learning rate
+        scheduler.step()
 
         #current accuracy for the epoch
         epoch_acc = val_accuracy
         if  epoch_acc > best_acc:
             best_acc = epoch_acc
-            bst_model_wts = copy.deepcopy(model.state_dict())
+            best_model_wts = copy.deepcopy(model.state_dict())
+
+        
+        results.get("Epoch").append((epoch+1)/Num_EPOCHS)
+        results.get("train_acc").append(train_accuracy)
+        results.get("train_loss").append(train_loss)
+        results.get("train_time").append(time_elapsed)
+        results.get("val_acc").append(val_accuracy)
+        results.get("Epoch").append(val_loss)
+        results.get("val_time").append(val_time_elapsed)
+
+    #load the best weights into the model(classifier layer) and save it for later retrieval
+    model.load_state_dict(best_model_wts)
+    torch.save(best_model_wts, 'best_model.pth')
+
 
 
 
@@ -262,7 +280,6 @@ if __name__ == "__main__":
     This decays the learning rate to 10% of the previous value per N epochs which is 7 epochs in our case
     """
     scheduler = lr_scheduler.StepLR(optimizer=optimizer, step_size=7, gamma=0.1)
-
     Num_EPOCHS = 25
 
     main(model, scheduler=scheduler, epochs=Num_EPOCHS, device=device, train_dataloader=train_loader, val_dataloader=val_loader)
