@@ -7,3 +7,4 @@ train/*
 /trainLabels.csv
 .DS_Store
 Notebooks/trainLabels_master.csv
+dev_images/
