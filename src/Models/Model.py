@@ -14,7 +14,7 @@ import torch.utils.data.dataloader
 from sklearn.model_selection import train_test_split
 from dotenv import load_dotenv
 import pandas as pd
-import Models.customDataLoader as customDataLoader
+from Models.customDataLoader import DiabeticRetinopathyDataset
 from torch.utils.data import DataLoader
 import copy
 
@@ -47,7 +47,7 @@ else:
 
 
 
-train_loader = customDataLoader(img_dir, train_df, transforms.Compose([
+train_custom_loader = DiabeticRetinopathyDataset(img_dir, train_df, transforms.Compose([
     transforms.ToTensor(), #each image will be a 4d tensor
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomRotation(degrees=10),
@@ -56,7 +56,7 @@ train_loader = customDataLoader(img_dir, train_df, transforms.Compose([
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
 
-test_loader =  customDataLoader(img_dir, test_df, transforms.Compose([
+test_custom_loader =  DiabeticRetinopathyDataset(img_dir, test_df, transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
@@ -64,15 +64,15 @@ test_loader =  customDataLoader(img_dir, test_df, transforms.Compose([
 
 #only create the val loader when we are in production mode
 if not DEVELOPMENT:
-    val_loader = customDataLoader(img_dir, val_df, transforms.Compose([
+    val_custom_loader = DiabeticRetinopathyDataset(img_dir, val_df, transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
     ]))
-    val = DataLoader(val_loader, batch_size=32, shuffle=True, num_workers=2)
+    val_loader = DataLoader(val_custom_loader, batch_size=32, shuffle=True, num_workers=2)
 
 
-train = DataLoader(dataset=train_loader, batch_size=32, shuffle=True, num_workers=2)
-test = DataLoader(dataset=test_loader, batch_size=32, shuffle=True, num_workers=2)
+train_loader = DataLoader(dataset=train_custom_loader, batch_size=32, shuffle=True, num_workers=2)
+test_loader = DataLoader(dataset=test_custom_loader, batch_size=32, shuffle=True, num_workers=2)
 
 
 
@@ -94,7 +94,7 @@ below shows we freeze the base layers and add the classifier layer
 """
 
 for parameters in model.features.parameters():
-    parameters.requires_grad(False)
+    parameters.requires_grad=False
     
 print(f"number of in features for the last layer is: {model.classifier} ")
 
@@ -110,6 +110,9 @@ model.classifier = torch.nn.Sequential(
 def train(model, dataloader, optimizer, loss):
     start = time.time()
     model.train() #sets the model to training mode
+    matches = 0
+    total = 0
+    train_loss = 0.0
     for _, batch in enumerate(dataloader):
         X,y = batch
         #zero the gradients
@@ -127,10 +130,10 @@ def train(model, dataloader, optimizer, loss):
 
 
         #softmax activation in the last layer to have values over a P.D
-        predictions = torch.argmax(torch.softmax(predictions,dim=1), dim=1)
+        predictions = torch.argmax(torch.softmax(outputs,dim=1), dim=1)
 
         # Count correct predictions in the batch:
-        batch_correct = (predictions == y).sum().item() / len(y) #accuracy of the batch between 0-1
+        batch_correct = (predictions == y).sum().item()
         matches += batch_correct
         total += y.size(0)
         loss_function.backward()
@@ -153,7 +156,7 @@ def test(dataloader, model, loss_fn):
     correct = 0
     running_loss = 0
 
-    with torch.inference_mode:  # No need to calculate the gradients.
+    with torch.inference_mode():  # No need to calculate the gradients.
 
         for _,  batch  in enumerate(dataloader):
             X, y = batch
@@ -185,16 +188,20 @@ def validate(model, dataloader, loss_fn):
     dataloader - the val dataloader that contains the val instances
     loss_fn - loss funct to see model performance
     """
+    running_acc = 0.0
+    running_loss = 0.0
+    total = 0
+
     since = time.time()
     model.eval() #set the model to eval mode
-    with torch.inference_mode:
+    with torch.inference_mode():
         for _ , batch in enumerate(dataloader):
             X, y = batch
             X = X.to(device)
             y = y.to(device)
             outputs = model(X)
-            running_loss = loss_fn(outputs,y)
-            val_loss+= running_loss.item()
+            loss = loss_fn(outputs,y)
+            running_loss+= loss.item()
 
             predictions = torch.argmax(torch.softmax(outputs,dim=1),dim=1)
             val_matches = (predictions == y).sum().item()
@@ -204,17 +211,19 @@ def validate(model, dataloader, loss_fn):
 
            
 
-        epoch_acc = running_acc / total
-        epoch_loss = running_loss / len(dataloader)
+        val_acc = running_acc / total
+        val_loss = running_loss / len(dataloader)
 
         time_elapsed = (time.time() - since) / 60
-        return epoch_acc, epoch_loss, time_elapsed
+        return val_loss, val_acc, time_elapsed
         
 
 
 
+def model_comparions(model):
+    pass
 
-def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, optimizer_Adam, criterion):
+def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, optimizer, criterion ,val_dataloader = None):
 
     """
     The main function which is used during training, we also define the scheduler to decay the learning rate
@@ -224,7 +233,7 @@ def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, opt
 
     best_model_wts  = copy.deepcopy(model.state_dict())
 
-    results ={"Epoch":[],
+    results ={
             "train_acc" : [],
             "train_loss" :[],
             "train_time" :[],
@@ -239,33 +248,55 @@ def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, opt
         deep copy the model with the best parameters after computing the updated best accuracy in val set
         """
         train_loss, train_accuracy, time_elapsed = train(model=model, dataloader=train_dataloader,
-         optimizer=optimizer_Adam, loss=criterion)
+         optimizer=optimizer, loss=criterion)
         
-        val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
 
-        #scheduler to decay learning rate
+         #scheduler to decay learning rate
         scheduler.step()
 
-        #current accuracy for the epoch
-        epoch_acc = val_accuracy
-        if  epoch_acc > best_acc:
-            best_acc = epoch_acc
-            best_model_wts = copy.deepcopy(model.state_dict())
-
         
-        results.get("Epoch").append((epoch+1)/Num_EPOCHS)
+        #if we are using the validation set - meaning were using the full dataset and not the 10% of data (for quick prototype)
+        if use_val_dataloader and val_dataloader is not None:
+            val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
+            #current accuracy for the epoch
+            epoch_acc = val_accuracy
+            if  epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(model.state_dict())
+
+            #here we track the metrics for later visualizations 
+            results.get("val_acc").append(val_accuracy)
+            results.get("val_loss").append(val_loss)
+            results.get("val_time").append(val_time_elapsed)
+
+
+            print(f"Epoch {epoch+1}/{EPOCHS}: "
+            f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
+            f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}"
+            f"Training time: {time_elapsed}")
+
+        else:
+            #the val accuracy is not needed here as we are not using a val set.
+            print(f"Epoch {epoch+1}/{EPOCHS}: "
+            f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
+            f"Training time: {time_elapsed}")
+
+
+        #we always track these results - regardless of val set usage or not
         results.get("train_acc").append(train_accuracy)
         results.get("train_loss").append(train_loss)
         results.get("train_time").append(time_elapsed)
-        results.get("val_acc").append(val_accuracy)
-        results.get("Epoch").append(val_loss)
-        results.get("val_time").append(val_time_elapsed)
 
+ 
     #load the best weights into the model(classifier layer) and save it for later retrieval
-    model.load_state_dict(best_model_wts)
-    torch.save(best_model_wts, 'best_model.pth')
+    if use_val_dataloader:
+        model.load_state_dict(best_model_wts)
+        torch.save(best_model_wts, 'best_model.pth')
 
 
+    #once the training loop is completed, begin the testing.     
+
+   
 
 
 if __name__ == "__main__":
@@ -282,5 +313,12 @@ if __name__ == "__main__":
     scheduler = lr_scheduler.StepLR(optimizer=optimizer, step_size=7, gamma=0.1)
     Num_EPOCHS = 25
 
-    main(model, scheduler=scheduler, epochs=Num_EPOCHS, device=device, train_dataloader=train_loader, val_dataloader=val_loader)
+    if DEVELOPMENT:
+        main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=False
+        optimizer=optimizer, criterion=criterion)
+    
+    else:
+        main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=True, 
+        optimizer=optimizer, criterion=criterion, val_dataloader=val_loader)
+
     
