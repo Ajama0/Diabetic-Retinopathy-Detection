@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 import pandas as pd
 import Models.customDataLoader as customDataLoader
 from torch.utils.data import DataLoader
+import copy
+
 
 DEVELOPMENT = True
 if DEVELOPMENT:
@@ -47,16 +49,15 @@ else:
 
 train_loader = customDataLoader(img_dir, train_df, transforms.Compose([
     transforms.ToTensor(), #each image will be a 4d tensor
-    transforms.RandomVerticalFlip(p=0.5),
-    transforms.RandomRotation(10),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(degrees=10),
+    transforms.ColorJitter(brightness=0.3),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
 
 test_loader =  customDataLoader(img_dir, test_df, transforms.Compose([
     transforms.ToTensor(),
-    transforms.RandomVerticalFlip(p=0.5),
-     transforms.RandomRotation(10),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
@@ -83,7 +84,7 @@ print(f"device being used is {device}")
 weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT
 model = torchvision.models.efficientnet_b0(weights=weights).to(device)
 
-print(model.summary())
+print(model.features)
 
 """
 we'll freeze the base feature extraction layers for N epochs whilst only training the head classifier
@@ -107,6 +108,7 @@ model.classifier = torch.nn.Sequential(
 
 
 def train(model, dataloader, optimizer, loss):
+    start = time.time()
     model.train() #sets the model to training mode
     for _, batch in enumerate(dataloader):
         X,y = batch
@@ -137,9 +139,10 @@ def train(model, dataloader, optimizer, loss):
 
     #the len(dataloader) is the len(dataset)/32
     average_loss = train_loss / len(dataloader)  
-    average_train_acc = matches / len(dataloader)
-    #the average loss and training accuracy for a batch within each EPOCH
-    return average_loss, average_train_acc
+    train_acc = matches / total
+    time_elapsed = (time.time() - start) / 60
+    #the average lossfor a batch within each EPOCH , the accuracy and the total training time for each epoch
+    return average_loss, train_acc, time_elapsed
 
 
 
@@ -150,7 +153,7 @@ def test(dataloader, model, loss_fn):
     correct = 0
     running_loss = 0
 
-    with torch.no_grad():  # No need to calculate the gradients.
+    with torch.inference_mode:  # No need to calculate the gradients.
 
         for _,  batch  in enumerate(dataloader):
             X, y = batch
@@ -167,33 +170,100 @@ def test(dataloader, model, loss_fn):
     print(f'\ntest Loss = {avg_loss:.6f}', end='\t')
     print(f'Accuracy on test set = {100 * (correct / total):.6f}% [{correct}/{total}]')  
 
+    """
+    Confusion Matrix and other matrix to be added
+    """
+
     return avg_loss
 
 
 def validate(model, dataloader, loss_fn):
-    pass
 
+    """
+    ARGS:
+    Model - Represents the current pretrained model being used
+    dataloader - the val dataloader that contains the val instances
+    loss_fn - loss funct to see model performance
+    """
+    since = time.time()
+    model.eval() #set the model to eval mode
+    with torch.inference_mode:
+        for _ , batch in enumerate(dataloader):
+            X, y = batch
+            X = X.to(device)
+            y = y.to(device)
+            outputs = model(X)
+            running_loss = loss_fn(outputs,y)
+            val_loss+= running_loss.item()
+
+            predictions = torch.argmax(torch.softmax(outputs,dim=1),dim=1)
+            val_matches = (predictions == y).sum().item()
+            running_acc+=val_matches
+            #we can calculate validation accuracy by using the total 
+            total +=y.size(0)
+
+           
+
+        epoch_acc = running_acc / total
+        epoch_loss = running_loss / len(dataloader)
+
+        time_elapsed = (time.time() - since) / 60
+        return epoch_acc, epoch_loss, time_elapsed
         
 
+
+
+
+def main(model, scheduler, EPOCHS, device, train_dataloader, val_dataloader, optimizer_Adam, criterion):
+
+    """
+    The main function which is used during training, we also define the scheduler to decay the learning rate
+    """
+    
+    best_acc = 0.0
+
+    best_model_wts  = copy.deepcopy(model.state_dict())
+
+    results = {"train_acc" : [],
+               "train_loss" :[],
+               "train_time" :[],
+               "val_acc" : [],
+               "val_loss":[],
+               "val_time" : []
+}
+
+    for epoch in range(EPOCHS):
         
+        """
+        deep copy the model with the best parameters after computing the updated best accuracy in val set
+        """
+        train_loss, train_accuracy, time_elapsed = train(model=model, dataloader=train_dataloader,
+         optimizer=optimizer_Adam, loss=criterion)
+        
+        val_loss, val_accuracy, time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
+
+        #current accuracy for the epoch
+        epoch_acc = val_accuracy
+        if  epoch_acc > best_acc:
+            best_acc = epoch_acc
+            bst_model_wts = copy.deepcopy(model.state_dict())
 
 
 
+if __name__ == "__main__":
 
+    #define the optimizer
+    optimizer = optim.Adam(model.parameters(),lr=0.001)
 
+    #defines our loss function
+    criterion = nn.CrossEntropyLoss()
 
+    """
+    This decays the learning rate to 10% of the previous value per N epochs which is 7 epochs in our case
+    """
+    scheduler = lr_scheduler.StepLR(optimizer=optimizer, step_size=7, gamma=0.1)
 
+    Num_EPOCHS = 25
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    main(model, scheduler=scheduler, epochs=Num_EPOCHS, device=device, train_dataloader=train_loader, val_dataloader=val_loader)
+    
