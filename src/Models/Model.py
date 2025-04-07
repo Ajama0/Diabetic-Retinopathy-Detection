@@ -221,12 +221,20 @@ def validate(model, dataloader, loss_fn):
         
 
 
+def visualizations(results):
+    pass
+
+
+def early_stopping():
+    pass
 
 def model_comparions(model):
     """
     pass in a set model and compare the results. 
     """
     pass
+
+
 
 def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, optimizer, criterion ,val_dataloader = None):
 
