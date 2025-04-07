@@ -14,7 +14,8 @@ import torch.utils.data.dataloader
 from sklearn.model_selection import train_test_split
 from dotenv import load_dotenv
 import pandas as pd
-from Models.customDataLoader import DiabeticRetinopathyDataset
+from tqdm import tqdm
+from Models.customDataset import DiabeticRetinopathyDataset
 from torch.utils.data import DataLoader
 import copy
 
@@ -25,16 +26,16 @@ if DEVELOPMENT:
     we have a dev csv which is the currently 10% of the data, lets split into train and test so we can pass to the dataloader
     """
     load_dotenv()
-    labels_csv = os.getenv("DR_DEV")
+    labels_csv = os.getenv("DEV_CSV")
     img_dir = os.getenv("DEV_IMAGES")
     if labels_csv is not None:
         df = pd.read_csv(labels_csv)
-    train_df, test_df = train_test_split(df,test_size=0.1, random_state=42, stratify=df['level'])
+    train_df, test_df = train_test_split(df,test_size=0.2, random_state=42, stratify=df['level'])
 
     
 else:
     #otherwise if this is production
-    img_dir = os.getenv("DR_IMAGES")
+    img_dir = os.getenv("DR_IMAGES_PATH")
     labels_csv = os.getenv("DR_LABELS_PATH")
     if labels_csv is not None:
         df = pd.read_csv(labels_csv)
@@ -47,7 +48,7 @@ else:
 
 
 
-train_custom_loader = DiabeticRetinopathyDataset(img_dir, train_df, transforms.Compose([
+train_dataset = DiabeticRetinopathyDataset(img_dir, train_df, transforms.Compose([
     transforms.ToTensor(), #each image will be a 4d tensor
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomRotation(degrees=10),
@@ -56,7 +57,7 @@ train_custom_loader = DiabeticRetinopathyDataset(img_dir, train_df, transforms.C
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
 
-test_custom_loader =  DiabeticRetinopathyDataset(img_dir, test_df, transforms.Compose([
+test_dataset =  DiabeticRetinopathyDataset(img_dir, test_df, transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
@@ -64,15 +65,15 @@ test_custom_loader =  DiabeticRetinopathyDataset(img_dir, test_df, transforms.Co
 
 #only create the val loader when we are in production mode
 if not DEVELOPMENT:
-    val_custom_loader = DiabeticRetinopathyDataset(img_dir, val_df, transforms.Compose([
+    val_dataset = DiabeticRetinopathyDataset(img_dir, val_df, transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
     ]))
-    val_loader = DataLoader(val_custom_loader, batch_size=32, shuffle=True, num_workers=2)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True, num_workers=2)
 
 
-train_loader = DataLoader(dataset=train_custom_loader, batch_size=32, shuffle=True, num_workers=2)
-test_loader = DataLoader(dataset=test_custom_loader, batch_size=32, shuffle=True, num_workers=2)
+train_loader = DataLoader(dataset=train_dataset, batch_size=32, shuffle=True, num_workers=2)
+test_loader = DataLoader(dataset=test_dataset, batch_size=32, shuffle=True, num_workers=2)
 
 
 
@@ -96,7 +97,7 @@ below shows we freeze the base layers and add the classifier layer
 for parameters in model.features.parameters():
     parameters.requires_grad=False
     
-print(f"number of in features for the last layer is: {model.classifier} ")
+#print(f"number of in features for the last layer is: {model.classifier} ")
 
 
 
@@ -113,7 +114,7 @@ def train(model, dataloader, optimizer, loss):
     matches = 0
     total = 0
     train_loss = 0.0
-    for _, batch in enumerate(dataloader):
+    for _, batch in enumerate(tqdm(dataloader, desc="training", leave=False)):
         X,y = batch
         #zero the gradients
         optimizer.zero_grad()
@@ -129,7 +130,7 @@ def train(model, dataloader, optimizer, loss):
         """
 
 
-        #softmax activation in the last layer to have values over a P.D
+        #calculate the predictions by taking largest logit value in output layer
         predictions = torch.argmax(torch.softmax(outputs,dim=1), dim=1)
 
         # Count correct predictions in the batch:
@@ -158,26 +159,27 @@ def test(dataloader, model, loss_fn):
 
     with torch.inference_mode():  # No need to calculate the gradients.
 
-        for _,  batch  in enumerate(dataloader):
+        for _,  batch  in enumerate(tqdm(dataloader, desc="testing", leave=False)):
             X, y = batch
             output = model(X.to(device))  # model's output.
             loss = loss_fn(output, y.to(device)) # loss calculation.
             running_loss += loss.item()
 
             total += y.size(0)
-            predictions = output.argmax(dim=1).cpu().detach()
+            predictions = output.argmax(dim=1)
             correct += (predictions == y).sum().item()
 
-    avg_loss = running_loss / len(dataloader)  # Average loss per batch for each EPOCH .
+    test_loss = running_loss / len(dataloader)  # Average loss per batch for each EPOCH .
+    test_accuracy = correct / total
 
-    print(f'\ntest Loss = {avg_loss:.6f}', end='\t')
-    print(f'Accuracy on test set = {100 * (correct / total):.6f}% [{correct}/{total}]')  
+    #print(f'\ntest Loss = {avg_loss:.6f}', end='\t')
+    #print(f'Accuracy on test set = {100 * (correct / total):.6f}% [{correct}/{total}]')  
 
     """
     Confusion Matrix and other matrix to be added
     """
 
-    return avg_loss
+    return test_loss, test_accuracy
 
 
 def validate(model, dataloader, loss_fn):
@@ -195,7 +197,7 @@ def validate(model, dataloader, loss_fn):
     since = time.time()
     model.eval() #set the model to eval mode
     with torch.inference_mode():
-        for _ , batch in enumerate(dataloader):
+        for _ , batch in enumerate(tqdm(dataloader, desc="validation")):
             X, y = batch
             X = X.to(device)
             y = y.to(device)
@@ -221,6 +223,9 @@ def validate(model, dataloader, loss_fn):
 
 
 def model_comparions(model):
+    """
+    pass in a set model and compare the results. 
+    """
     pass
 
 def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, optimizer, criterion ,val_dataloader = None):
@@ -242,7 +247,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
             "val_time" : []
 }
 
-    for epoch in range(EPOCHS):
+    for epoch in tqdm(range(EPOCHS), desc="Epoch", leave=False):
         
         """
         deep copy the model with the best parameters after computing the updated best accuracy in val set
@@ -250,9 +255,17 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         train_loss, train_accuracy, time_elapsed = train(model=model, dataloader=train_dataloader,
          optimizer=optimizer, loss=criterion)
         
+        print(f"Epoch {epoch+1}/{EPOCHS}: "
+        f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
+        f"Training time: {time_elapsed}")
 
          #scheduler to decay learning rate
         scheduler.step()
+
+        """
+        stop training if the model starts converging with accuracy
+        """
+
 
         
         #if we are using the validation set - meaning were using the full dataset and not the 10% of data (for quick prototype)
@@ -271,9 +284,8 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
 
 
             print(f"Epoch {epoch+1}/{EPOCHS}: "
-            f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
             f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}"
-            f"Training time: {time_elapsed}")
+            f"val time: {val_time_elapsed}")
 
         else:
             #the val accuracy is not needed here as we are not using a val set.
@@ -294,7 +306,16 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         torch.save(best_model_wts, 'best_model.pth')
 
 
-    #once the training loop is completed, begin the testing.     
+
+
+
+    print("-------------------------------------------------------------------")
+    print("running it through the test set")
+    #once the training loop is completed, we begin the testing. 
+    test_loss, test_acc = test(test_loader, model=model, loss_fn=criterion)
+    print(f"test_loss : {test_loss:.4f}")
+    print(f"test accuracy : {test_acc:.4f}")
+        
 
    
 
@@ -314,7 +335,7 @@ if __name__ == "__main__":
     Num_EPOCHS = 25
 
     if DEVELOPMENT:
-        main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=False
+        main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=False,
         optimizer=optimizer, criterion=criterion)
     
     else:

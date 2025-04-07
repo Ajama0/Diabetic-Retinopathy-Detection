@@ -71,5 +71,5 @@ class DiabeticRetinopathyDataset(Dataset):
         if self.transform:
             image = self.transform(img)
 
-        return image, img_label
+        return (image, img_label)
     
