@@ -52,7 +52,7 @@ train_dataset = DiabeticRetinopathyDataset(img_dir, train_df, transforms.Compose
     transforms.ToTensor(), #each image will be a 4d tensor
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomRotation(degrees=10),
-    transforms.ColorJitter(brightness=0.3),
+    transforms.ColorJitter(brightness=0.2),
     transforms.Normalize(
     mean=[0.485, 0.456, 0.406],
     std=[0.229, 0.224, 0.225])]))
@@ -263,11 +263,8 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         train_loss, train_accuracy, time_elapsed = train(model=model, dataloader=train_dataloader,
          optimizer=optimizer, loss=criterion)
         
-        print(f"Epoch {epoch+1}/{EPOCHS}: "
-        f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
-        f"Training time: {time_elapsed}")
 
-         #scheduler to decay learning rate
+        #scheduler to decay learning rate
         scheduler.step()
 
         """
@@ -290,8 +287,10 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
             results.get("val_loss").append(val_loss)
             results.get("val_time").append(val_time_elapsed)
 
-
+             
             print(f"Epoch {epoch+1}/{EPOCHS}: "
+            f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
+            f"Training time: {time_elapsed}"
             f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}"
             f"val time: {val_time_elapsed}")
 
@@ -311,7 +310,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
     #load the best weights into the model(classifier layer) and save it for later retrieval
     if use_val_dataloader:
         model.load_state_dict(best_model_wts)
-        torch.save(best_model_wts, 'best_model.pth')
+        torch.save(best_model_wts, 'best_model.pth') #saves the model locally
 
 
 
@@ -340,7 +339,7 @@ if __name__ == "__main__":
     This decays the learning rate to 10% of the previous value per N epochs which is 7 epochs in our case
     """
     scheduler = lr_scheduler.StepLR(optimizer=optimizer, step_size=7, gamma=0.1)
-    Num_EPOCHS = 25
+    Num_EPOCHS = 20
 
     if DEVELOPMENT:
         main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=False,

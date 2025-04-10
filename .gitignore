@@ -9,3 +9,4 @@ train/*
 Notebooks/trainLabels_master.csv
 dev_images/
 my_venv_py311/
+/Biruni dataset

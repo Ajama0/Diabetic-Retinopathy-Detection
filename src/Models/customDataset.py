@@ -63,7 +63,8 @@ class DiabeticRetinopathyDataset(Dataset):
         """
         because were only using 10% of the data, the images will be mapped to each row of our dev csv
         """
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         #now we want the label corresponding to that specific image at the index
         img_label = self.img_labels.iloc[idx,1]
 
