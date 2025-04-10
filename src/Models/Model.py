@@ -1,4 +1,5 @@
 
+from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -221,8 +222,81 @@ def validate(model, dataloader, loss_fn):
         
 
 
-def visualizations(results):
-    pass
+def visualizations(all_predictions, all_labels, results=None, class_names=None):
+    """
+    Generate visualizations for model performance
+    
+    Args:
+        all_predictions: List of model predictions
+        all_labels: List of ground truth labels
+        results: Dictionary containing training/validation metrics
+        class_names: List of class names (default is None, will use numeric labels)
+    """
+    # If no class names provided, use numeric labels
+    if class_names is None:
+        class_names = [str(i) for i in range(5)]  # Assuming 5 classes for diabetic retinopathy
+    
+    # 1. Create and display confusion matrix
+    cm = confusion_matrix(all_labels, all_predictions)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp.plot(cmap=plt.cm.Blues, ax=ax)
+    plt.title('Confusion Matrix')
+    plt.savefig('confusion_matrix.png')
+    plt.show()
+    
+    # 2. Print classification report
+    print("\nClassification Report:")
+    print(classification_report(all_labels, all_predictions, target_names=class_names))
+    
+    # 3. Plot training/validation curves if results are provided
+    if results:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+        
+        # Plot accuracy
+        ax1.plot(results['train_acc'], label='Training Accuracy')
+        if results['val_acc']:  # Only if validation data exists
+            ax1.plot(results['val_acc'], label='Validation Accuracy')
+        ax1.set_title('Model Accuracy')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Accuracy')
+        ax1.legend()
+        
+        # Plot loss
+        ax2.plot(results['train_loss'], label='Training Loss')
+        if results['val_loss']:  # Only if validation data exists
+            ax2.plot(results['val_loss'], label='Validation Loss')
+        ax2.set_title('Model Loss')
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Loss')
+        ax2.legend()
+        
+        plt.tight_layout()
+        plt.savefig('training_curves.png')
+        plt.show()
+        
+    # 4. Class distribution visualization
+    class_counts = np.bincount(all_labels, minlength=len(class_names))
+    
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(class_names, class_counts)
+    
+    # Add count labels on top of each bar
+    for bar, count in zip(bars, class_counts):
+        plt.text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 0.1,
+            str(count),
+            ha='center'
+        )
+    
+    plt.title('Class Distribution in Test Set')
+    plt.xlabel('Class')
+    plt.ylabel('Count')
+    plt.savefig('class_distribution.png')
+    plt.show()
+
+
 
 
 def model_comparions(model):
