@@ -266,12 +266,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         #scheduler to decay learning rate
         scheduler.step()
 
-        """
-        stop training if the model starts converging with accuracy
-        """
 
-
-        
         #if we are using the validation set - meaning were using the full dataset and not the 10% of data (for quick prototype)
         if use_val_dataloader and val_dataloader is not None:
             val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
@@ -287,7 +282,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
 
             else:
                 epochs_without_improvement+=1
-                print(f"loss didnt improve at : {epoch+1}")
+                print(f"loss didnt improve at : {epoch+1}/{EPOCHS}")
 
 
             #if for more than 10 epochs, the loss doesnt improve(decrease) then we can copy the learnable parameters and stop
@@ -304,9 +299,9 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
              
             print(f"Epoch {epoch+1}/{EPOCHS}: "
             f"Train Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
-            f"Training time: {time_elapsed}"
-            f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}"
-            f"val time: {val_time_elapsed}")
+            f"Training time: {time_elapsed:.2f} min, "
+            f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}, "
+            f"Val time: {val_time_elapsed:.2f} min")
 
         else:
             #the val accuracy is not needed here as we are not using a val set.
