@@ -158,6 +158,11 @@ def test(dataloader, model, loss_fn):
     correct = 0
     running_loss = 0
 
+    # Lists to store all predictions and ground truth
+    all_predictions = []
+    all_labels = []
+
+
     with torch.inference_mode():  # No need to calculate the gradients.
 
         for _,  batch  in enumerate(tqdm(dataloader, desc="testing", leave=False)):
@@ -170,6 +175,11 @@ def test(dataloader, model, loss_fn):
             predictions = output.argmax(dim=1)
             correct += (predictions == y).sum().item()
 
+            #here we basically move to cpu (scikit learn doesnt work with gpu's) & add the predictions as a flat list
+            all_predictions.extend(predictions.cpu().numpy())
+            all_labels.extend(y.cpu().numpy())
+
+
     test_loss = running_loss / len(dataloader)  # Average loss per batch for each EPOCH .
     test_accuracy = correct / total
 
@@ -180,7 +190,7 @@ def test(dataloader, model, loss_fn):
     Confusion Matrix and other matrix to be added
     """
 
-    return test_loss, test_accuracy
+    return test_loss, test_accuracy, all_predictions, all_labels
 
 
 def validate(model, dataloader, loss_fn):
@@ -234,9 +244,9 @@ def visualizations(all_predictions, all_labels, results=None, class_names=None):
     """
     # If no class names provided, use numeric labels
     if class_names is None:
-        class_names = [str(i) for i in range(5)]  # Assuming 5 classes for diabetic retinopathy
+        class_names = [str(i) for i in range(5)] 
     
-    # 1. Create and display confusion matrix
+    
     cm = confusion_matrix(all_labels, all_predictions)
     fig, ax = plt.subplots(figsize=(10, 8))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
@@ -245,27 +255,30 @@ def visualizations(all_predictions, all_labels, results=None, class_names=None):
     plt.savefig('confusion_matrix.png')
     plt.show()
     
-    # 2. Print classification report
+    
     print("\nClassification Report:")
     print(classification_report(all_labels, all_predictions, target_names=class_names))
     
-    # 3. Plot training/validation curves if results are provided
+    #training/validation curves 
     if results:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
         
-        # Plot accuracy
-        ax1.plot(results['train_acc'], label='Training Accuracy')
-        if results['val_acc']:  # Only if validation data exists
-            ax1.plot(results['val_acc'], label='Validation Accuracy')
+        
+        x_values = results.get('epoch', range(1, len(results['train_acc']) + 1))
+        
+        #accuracy
+        ax1.plot(x_values, results['train_acc'], label='Training Accuracy')
+        if results['val_acc']:  
+            ax1.plot(x_values[:len(results['val_acc'])], results['val_acc'], label='Validation Accuracy')
         ax1.set_title('Model Accuracy')
         ax1.set_xlabel('Epoch')
         ax1.set_ylabel('Accuracy')
         ax1.legend()
         
-        # Plot loss
-        ax2.plot(results['train_loss'], label='Training Loss')
-        if results['val_loss']:  # Only if validation data exists
-            ax2.plot(results['val_loss'], label='Validation Loss')
+        # loss
+        ax2.plot(x_values, results['train_loss'], label='Training Loss')
+        if results['val_loss']:  
+            ax2.plot(x_values[:len(results['val_loss'])], results['val_loss'], label='Validation Loss')
         ax2.set_title('Model Loss')
         ax2.set_xlabel('Epoch')
         ax2.set_ylabel('Loss')
@@ -275,28 +288,6 @@ def visualizations(all_predictions, all_labels, results=None, class_names=None):
         plt.savefig('training_curves.png')
         plt.show()
         
-    # 4. Class distribution visualization
-    class_counts = np.bincount(all_labels, minlength=len(class_names))
-    
-    plt.figure(figsize=(10, 6))
-    bars = plt.bar(class_names, class_counts)
-    
-    # Add count labels on top of each bar
-    for bar, count in zip(bars, class_counts):
-        plt.text(
-            bar.get_x() + bar.get_width()/2,
-            bar.get_height() + 0.1,
-            str(count),
-            ha='center'
-        )
-    
-    plt.title('Class Distribution in Test Set')
-    plt.xlabel('Class')
-    plt.ylabel('Count')
-    plt.savefig('class_distribution.png')
-    plt.show()
-
-
 
 
 def model_comparions(model):
@@ -320,6 +311,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
     best_model_wts  = copy.deepcopy(model.state_dict())
 
     results ={
+            "epoch" : [],
             "train_acc" : [],
             "train_loss" :[],
             "train_time" :[],
@@ -385,6 +377,7 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
 
 
         #we always track these results - regardless of val set usage or not
+        results.get('epoch').append(epoch+1)
         results.get("train_acc").append(train_accuracy)
         results.get("train_loss").append(train_loss)
         results.get("train_time").append(time_elapsed)
@@ -402,9 +395,14 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
     print("-------------------------------------------------------------------")
     print("running it through the test set")
     #once the training loop is completed, we begin the testing. 
-    test_loss, test_acc = test(test_loader, model=model, loss_fn=criterion)
+    test_loss, test_acc, all_predictions, all_labels = test(test_loader, model=model, loss_fn=criterion)
     print(f"test_loss : {test_loss:.4f}")
     print(f"test accuracy : {test_acc:.4f}")
+
+    class_names = ['No Dr', 'Mild', 'Moderate', 'Severe', 'Proliferative']
+    visualizations(all_predictions=all_predictions, all_labels=all_labels, results=results, class_names=class_names)
+
+    
         
 
    
