@@ -225,9 +225,6 @@ def visualizations(results):
     pass
 
 
-def early_stopping():
-    pass
-
 def model_comparions(model):
     """
     pass in a set model and compare the results. 
@@ -242,8 +239,10 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
     The main function which is used during training, we also define the scheduler to decay the learning rate
     """
     
-    best_acc = 0.0
-
+    
+    best_val_loss = float('inf')
+    epochs_without_improvement = 0
+    patience = 10
     best_model_wts  = copy.deepcopy(model.state_dict())
 
     results ={
@@ -276,12 +275,27 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         #if we are using the validation set - meaning were using the full dataset and not the 10% of data (for quick prototype)
         if use_val_dataloader and val_dataloader is not None:
             val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
-            #current accuracy for the epoch
-            epoch_acc = val_accuracy
-            if  epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
 
+            
+            #early stopping with val loss
+            epoch_loss = val_loss
+            if(epoch_loss<best_val_loss):
+                best_val_loss = epoch_loss
+                best_model_wts = copy.deepcopy(model.state_dict())
+                #reset the value if the loss starts to improve
+                epochs_without_improvement = 0
+
+            else:
+                epochs_without_improvement+=1
+                print(f"loss didnt improve at : {epoch+1}")
+
+
+            #if for more than 10 epochs, the loss doesnt improve(decrease) then we can copy the learnable parameters and stop
+            if (epochs_without_improvement>=patience): 
+               print("Early stopping triggered!!!")
+               break
+
+                     
             #here we track the metrics for later visualizations 
             results.get("val_acc").append(val_accuracy)
             results.get("val_loss").append(val_loss)
