@@ -102,9 +102,13 @@ def preprocess_and_save_before(img_dir, df):
 if __name__ == "__main__":
     load_dotenv()
     img_dir = os.getenv("DR_IMAGES_PATH")
-    csv = os.getenv("DEV_CSV")
+
+    #CHANGE here to switch between development and production
+    csv = os.getenv("DR_LABELS_PATH")
     df = pd.read_csv(csv)
-    output_dir = os.getenv("DEV_IMAGES")
+
+    #Change the output path between prod/dev
+    output_dir = os.getenv("PROD_IMAGES")
 
     preprocess_and_save(img_dir,output_dir, df)
     #preprocess_and_save_before(img_dir, df)

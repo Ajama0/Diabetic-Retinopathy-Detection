@@ -115,7 +115,7 @@ def train(model, dataloader, optimizer, loss):
     matches = 0
     total = 0
     train_loss = 0.0
-    for _, batch in enumerate(tqdm(dataloader, desc="training", leave=False)):
+    for _, batch in enumerate(dataloader):
         X,y = batch
         #zero the gradients
         optimizer.zero_grad()
@@ -165,7 +165,7 @@ def test(dataloader, model, loss_fn):
 
     with torch.inference_mode():  # No need to calculate the gradients.
 
-        for _,  batch  in enumerate(tqdm(dataloader, desc="testing", leave=False)):
+        for _,  batch  in enumerate(dataloader):
             X, y = batch
             output = model(X.to(device))  # model's output.
             loss = loss_fn(output, y.to(device)) # loss calculation.
@@ -173,7 +173,7 @@ def test(dataloader, model, loss_fn):
 
             total += y.size(0)
             predictions = output.argmax(dim=1)
-            correct += (predictions == y).sum().item()
+            correct += (predictions == y.to(device)).sum().item()
 
             #here we basically move to cpu (scikit learn doesnt work with gpu's) & add the predictions as a flat list
             all_predictions.extend(predictions.cpu().numpy())
@@ -187,7 +187,7 @@ def test(dataloader, model, loss_fn):
     #print(f'Accuracy on test set = {100 * (correct / total):.6f}% [{correct}/{total}]')  
 
     """
-    Confusion Matrix and other matrix to be added
+    Confusion Matrix and other metrics added in visualizatons func
     """
 
     return test_loss, test_accuracy, all_predictions, all_labels
@@ -208,7 +208,7 @@ def validate(model, dataloader, loss_fn):
     since = time.time()
     model.eval() #set the model to eval mode
     with torch.inference_mode():
-        for _ , batch in enumerate(tqdm(dataloader, desc="validation")):
+        for _ , batch in enumerate(dataloader):
             X, y = batch
             X = X.to(device)
             y = y.to(device)
