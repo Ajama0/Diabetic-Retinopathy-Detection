@@ -43,7 +43,7 @@ else:
     
     #now we can split the data for the production set
     train_df, temp_df = train_test_split(df, test_size=0.3, random_state=42, stratify=df['level'])
-    test_df, val_df = train_test_split(temp_df, test_size=0.15, random_state=42, stratify=df["level"])
+    test_df, val_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=df["level"])
     
 
 
@@ -172,8 +172,8 @@ def test(dataloader, model, loss_fn):
             running_loss += loss.item()
 
             total += y.size(0)
-            predictions = output.argmax(dim=1)
-            correct += (predictions == y.to(device)).sum().item()
+            predictions = torch.argmax(output,dim=1)
+            correct += (predictions == y).sum().item()
 
             #here we basically move to cpu (scikit learn doesnt work with gpu's) & add the predictions as a flat list
             all_predictions.extend(predictions.cpu().numpy())
@@ -298,6 +298,20 @@ def model_comparions(model):
 
 
 
+def checkpoints (model_state, optimizer_state, epoch, val_loss):
+    #lets create a checkpoint dict
+
+    checkpoint = {
+        "model_state_dict" : model_state,
+        "optimizer_state_dict" : optimizer_state,
+        "EPOCH" : epoch,
+        "val_loss" : val_loss
+    }
+
+    torch.save(checkpoint,"latest_checkpoint.pth")
+
+
+
 def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, optimizer, criterion ,val_dataloader = None):
 
     """
@@ -319,8 +333,10 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
             "val_loss":[],
             "val_time" : []
 }
+    
+   
 
-    for epoch in tqdm(range(EPOCHS), desc="Epoch", leave=False):
+    for epoch in tqdm(range(EPOCHS), desc="Epoch"):
         
         """
         deep copy the model with the best parameters after computing the updated best accuracy in val set
@@ -336,6 +352,12 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
         #if we are using the validation set - meaning were using the full dataset and not the 10% of data (for quick prototype)
         if use_val_dataloader and val_dataloader is not None:
             val_loss, val_accuracy, val_time_elapsed = validate(model, dataloader=val_dataloader, loss_fn=criterion)
+
+
+            #save the current models checkpoint at every 3 epochs
+            if(epoch % 3 ==0):
+                checkpoints(model.state_dict(),optimizer.state_dict(), epoch+1, val_loss)
+
 
             
             #early stopping with val loss
@@ -385,6 +407,8 @@ def main(model, scheduler, EPOCHS, train_dataloader, use_val_dataloader:bool, op
  
     #load the best weights into the model(classifier layer) and save it for later retrieval
     if use_val_dataloader:
+        #the current state represents the best set of parameters before the model began overfitting
+        #so before we pass it into the test function we load the best model state
         model.load_state_dict(best_model_wts)
         torch.save(best_model_wts, 'best_model.pth') #saves the model locally
 
@@ -424,7 +448,7 @@ if __name__ == "__main__":
 
     if DEVELOPMENT:
         main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=False,
-        optimizer=optimizer, criterion=criterion)
+        optimizer=optimizer, criterion=criterion,val_dataloader=None)
     
     else:
         main(model, scheduler=scheduler, EPOCHS=Num_EPOCHS, train_dataloader=train_loader, use_val_dataloader=True, 
