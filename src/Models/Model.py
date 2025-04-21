@@ -167,13 +167,15 @@ def test(dataloader, model, loss_fn):
 
         for _,  batch  in enumerate(dataloader):
             X, y = batch
-            output = model(X.to(device))  # model's output.
+            X = X.to(device)
+            y = y.to(device)
+            output = model(X)  # model's output.
             loss = loss_fn(output, y) # loss calculation.
             running_loss += loss.item()
 
             total += y.size(0)
             predictions = torch.argmax(output,dim=1)
-            correct += (predictions == y.to(device)).sum().item()
+            correct += (predictions == y).sum().item()
 
             #here we basically move to cpu (scikit learn doesnt work with gpu's) & add the predictions as a flat list
             all_predictions.extend(predictions.cpu().numpy())
