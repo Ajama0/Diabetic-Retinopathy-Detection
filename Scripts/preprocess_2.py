@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 
 
@@ -22,6 +23,10 @@ def scaleRadius(img, scale):
 def process_single_image(image_path, scale):
     # Read image
     a = cv2.imread(image_path)
+
+    if a is None:
+        raise ValueError(f"cv2.imread failed to read {image_path}")
+   
     a = cv2.cvtColor(a, cv2.COLOR_BGR2RGB)
     
     # Scale radius
@@ -57,7 +62,7 @@ def crop_image(img, tolerance):
 
     we can also opt to use a circular crop
     """
-    print(img.shape)
+    
     if img.ndim == 2:
         mask = img > tolerance
         #return the index values and return the cropped image
@@ -94,20 +99,35 @@ def crop_image(img, tolerance):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     labels_csv = os.getenv("DR_LABELS_PATH")
     images = os.getenv("DR_IMAGES_PATH")
-    output_dirs = os.getenv("DEV_IMAGES")
+    output_dirs = os.getenv("PREPROCESSED_IMAGES")
 
-    df = pd.read_csv(labels_csv)
+    if labels_csv is not None:
+        df = pd.read_csv(labels_csv)
+    else:
+        print("csv is null ")    
 
+    
+    for _, row in tqdm(df.iterrows(), total=len(df)):
+        try :
+            img_path = os.path.join(images,f"{row['image']}.jpeg")
+            _, preprocessed = process_single_image(img_path, scale = 500)
+            #this returns the preprocessed image which was scaled + high boost filtering
+            image = crop_image(preprocessed, tolerance=7)
 
-    for _, row in tqdm(df.iterrows()):
-        img_path = os.path.join(images,f"/{row['image']}")
-        image = cv2.imread(img_path)
-        preprocessed = process_single_image(image, scale = 500)
-        #this returns the preprocessed image which was scaled + high boost filtering
-        image = crop_image(preprocessed, tolerance=7)
+            saved_path = os.path.join(output_dirs,f"{row['image']}.jpeg")
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(saved_path,image)
 
-        saved_path = os.path.join(output_dirs,f"{row['image']}.jpeg")
-        cv2.imwrite(saved_path,image)
+        except Exception as e:
+            print(f"Error preocessing image : {row['image']}.jpeg: {e}")
+            with open("corruped_images.txt", "a") as f:
+                f.write(f"{row['image']}.jpeg\n")
+                #we save corruped images to a txt
+            continue
+     
+       
+       
 

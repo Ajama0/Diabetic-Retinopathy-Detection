@@ -43,7 +43,7 @@ else:
     
     #now we can split the data for the production set
     train_df, temp_df = train_test_split(df, test_size=0.3, random_state=42, stratify=df['level'])
-    test_df, val_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=df["level"])
+    test_df, val_df = train_test_split(temp_df, test_size=0.5, random_state=42, stratify=temp_df["level"])
     
 
 
