@@ -16,6 +16,9 @@ def scaleRadius(img, scale):
     if r == 0:
         r = 1
     s = scale*1.0/r
+    if(s>5):
+        #if the scaling factor is greater than 5, (essentially enlargment of the image by 5x) we return None
+        return None
     return cv2.resize(img, (0,0), fx=s, fy=s)
 
 
@@ -25,12 +28,25 @@ def process_single_image(image_path, scale):
     a = cv2.imread(image_path)
 
     if a is None:
-        raise ValueError(f"cv2.imread failed to read {image_path}")
+        #if the image is None or null
+        print(f"Could not read image: {image_path}")
+        with open(os.getenv("CORRUPTED_IMAGES"), "a") as f:
+            f.write(f"{image_path}\n")
+        return None, None
+        
    
     a = cv2.cvtColor(a, cv2.COLOR_BGR2RGB)
     
     # Scale radius
     a = scaleRadius(a, scale)
+
+    if a is None:
+        #if the scaling factor is too high
+        print(f"Image has problematic scaling factor: {image_path}")
+        with open(os.getenv("CORRUPTED_IMAGES"), "a") as f:
+            f.write(f"{image_path}\n")
+        return None, None
+
     
     # Create mask
     b = np.zeros(a.shape)
@@ -113,8 +129,10 @@ if __name__ == "__main__":
     for _, row in tqdm(df.iterrows(), total=len(df)):
         try :
             img_path = os.path.join(images,f"{row['image']}.jpeg")
-            _, preprocessed = process_single_image(img_path, scale = 500)
+            scaled_img, preprocessed = process_single_image(img_path, scale = 500)
             #this returns the preprocessed image which was scaled + high boost filtering
+            if(scaled_img is None and preprocessed is None):
+                continue
             image = crop_image(preprocessed, tolerance=7)
 
             saved_path = os.path.join(output_dirs,f"{row['image']}.jpeg")
@@ -123,7 +141,7 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"Error preocessing image : {row['image']}.jpeg: {e}")
-            with open("corruped_images.txt", "a") as f:
+            with open(os.getenv("CORRUPTED_IMAGES"), "a") as f:
                 f.write(f"{row['image']}.jpeg\n")
                 #we save corruped images to a txt
             continue
