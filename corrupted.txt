@@ -1,2 +1,4 @@
 
 /Users/abas/Projects/DR/Diabetic-Retinopathy-Detection/train/492_right.jpeg
+/Users/abas/Projects/DR/Diabetic-Retinopathy-Detection/train/492_right.jpeg
+/Users/abas/Projects/DR/Diabetic-Retinopathy-Detection/train/492_right.jpeg

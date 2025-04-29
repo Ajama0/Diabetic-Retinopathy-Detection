@@ -13,4 +13,5 @@ Biruni dataset/*
 .DS_Store
 
 prod_images/*
-
+Preprocessed_images/*
+binary_classification.csv
