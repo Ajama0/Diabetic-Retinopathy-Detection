@@ -64,6 +64,11 @@ class DiabeticRetinopathyDataset(Dataset):
         because were only using 10% of the data, the images will be mapped to each row of our dev csv
         """
         img = cv2.imread(img_path)
+
+        if img is None:
+            print(f"image is None and could not be processed: {img_path}")
+            raise RuntimeError(f"Failed to load image at {img_path}")
+    
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         #now we want the label corresponding to that specific image at the index
         img_label = self.img_labels.iloc[idx,1]

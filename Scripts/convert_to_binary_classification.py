@@ -16,11 +16,23 @@ and DR consisting of severity gradings MIld, Moderate, Severe, PDF. (class 1,2,3
 """
 
 
+def image_exists(img_code):
+    img_path = os.path.join(os.getenv('PREPROCESSED_IMAGES'),f"{img_code}.jpeg")
+    return os.path.exists(img_path)
+
+
+
 
 def binary_classification(df, output_csv):
 
-    #create copy
-    df_binary = df.copy()
+    """as we removed some images during the preprocessing step, lets ensure we also remove them in our new binary csv
+        we call image_exsits to filter out the df first
+    """
+
+    filtered_df = df[df['image'].apply(image_exists)]
+    print("filtered the csv")
+
+    df_binary = filtered_df
 
     if 'level' in df_binary.columns:
         
