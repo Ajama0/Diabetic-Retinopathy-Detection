@@ -7,8 +7,30 @@ The motivations for this project :
 
 - Patients today often face delays in diagnosis due to limited access to specialists and time-consuming manual screening processes. Automated detection systems like the one proposed in this project can help accelerate diagnosis, reduce workload on medical professionals, and potentially improve early intervention outcomes.
 ## Table of contents 
-
-
-1. Download the dataset from [Kaggle](https://www.kaggle.com/competitions/aptos2019-blindness-detection).
-2. Extract the contents of the dataset zip file.
-3. Place the extracted files in the `data/raw/` folder.
+4. [Dataset](#dataset)
+    - [Source](#source)
+    - [Structure](#structure)
+    - [Preprocessing](#preprocessing)
+5. [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
+    - [Class Distribution](#class-distribution)
+    - [Sample Images](#sample-images)
+    - [Observations](#observations)
+6. [Modeling Approach](#modeling-approach)
+    - [Baseline Model](#baseline-model)
+    - [Fine-Tuning Strategies](#fine-tuning-strategies)
+    - [Model Architectures](#model-architectures)
+7. [Training Details](#training-details)
+    - [Loss Function](#loss-function)
+    - [Optimizer and Scheduler](#optimizer-and-scheduler)
+    - [Early Stopping and Checkpoints](#early-stopping-and-checkpoints)
+8. [Evaluation](#evaluation)
+    - [Metrics Used](#metrics-used)
+    - [Validation and Test Results](#validation-and-test-results)
+    - [Confusion Matrix](#confusion-matrix)
+9. [Visualizations](#visualizations)
+10. [Challenges and Solutions](#challenges-and-solutions)
+11. [Conclusion](#conclusion)
+12. [Future Work](#future-work)
+13. [How to Run the Project](#how-to-run-the-project)
+14. [References](#references)
+.
