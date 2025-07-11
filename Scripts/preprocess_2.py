@@ -116,31 +116,42 @@ def crop_image(img, tolerance):
 
 if __name__ == "__main__":
     load_dotenv()
-    labels_csv = os.getenv("DR_LABELS_PATH")
-    images = os.getenv("DR_IMAGES_PATH")
-    output_dirs = os.getenv("PREPROCESSED_IMAGES")
+
+    BIRUNI = True
+    if BIRUNI:
+        labels_csv = os.getenv("BIRUNI_LABELS_PATH")
+        images = os.getenv("BIRUNI_IMAGES_PATH")
+        output_dirs = os.getenv("BIRUNI_PREPROCESSED_IMAGES")
+    
+    else:
+        labels_csv = os.getenv("DR_LABELS_PATH")
+        images = os.getenv("DR_IMAGES_PATH")
+        output_dirs = os.getenv("PREPROCESSED_IMAGES")
+
+
+
 
     if labels_csv is not None:
-        df = pd.read_csv(labels_csv)
+        df = pd.read_csv(labels_csv, dtype={"image" : str})
     else:
         print("csv is null ")    
 
     
     for _, row in tqdm(df.iterrows(), total=len(df)):
         try :
-            img_path = os.path.join(images,f"{row['image']}.jpeg")
+            img_path = os.path.join(images,f"{row['image']}.jpg")
             scaled_img, preprocessed = process_single_image(img_path, scale = 500)
             #this returns the preprocessed image which was scaled + high boost filtering
             if(scaled_img is None and preprocessed is None):
                 continue
             image = crop_image(preprocessed, tolerance=7)
 
-            saved_path = os.path.join(output_dirs,f"{row['image']}.jpeg")
+            saved_path = os.path.join(output_dirs,f"{row['image']}.jpg")
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             cv2.imwrite(saved_path,image)
 
         except Exception as e:
-            print(f"Error preocessing image : {row['image']}.jpeg: {e}")
+            print(f"Error preocessing image : {row['image']}.jpg: {e}")
             with open(os.getenv("CORRUPTED_IMAGES"), "a") as f:
                 f.write(f"{row['image']}.jpeg\n")
                 #we save corruped images to a txt

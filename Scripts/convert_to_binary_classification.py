@@ -47,10 +47,6 @@ def binary_classification(df, output_csv):
             print(f"excetpion occured: {e}")    
 
 
-    
-
-def offline_augmentation(df, output_dir):
-    pass
 
 
 
@@ -60,6 +56,8 @@ def offline_augmentation(df, output_dir):
 
 if __name__ == '__main__':
     load_dotenv()
+
+    """Load the multi-class CSV file from environment variable and convert it to binary classification CSV by running the script."""
     multi_csv = os.getenv("DR_LABELS_PATH")
 
     if multi_csv is not None:

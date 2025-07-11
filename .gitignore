@@ -4,7 +4,7 @@
 venv/
 .env
 train/*
-/trainLabels.csv
+Notebooks/trainLabels.csv
 .DS_Store
 Notebooks/trainLabels_master.csv
 dev_images/*
@@ -14,4 +14,7 @@ Biruni dataset/*
 
 prod_images/*
 Preprocessed_images/*
-binary_classification.csv
+Notebooks/binary_classification.csv
+
+Biruni_Dataset-2.csv
+Biruni_Preprocessed/*
