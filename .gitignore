@@ -1,20 +1,30 @@
+# Ignore all CSV files
+*.csv
 
+# Ignore image files
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+*.tiff
+*.webp
 
-
+# Ignore virtual environments
 venv/
-.env
-train/*
-Notebooks/trainLabels.csv
-.DS_Store
-Notebooks/trainLabels_master.csv
-dev_images/*
 my_venv_py311/
-Biruni dataset/*
+
+# Ignore .env files
+.env
+
+# Ignore all images in specific folders
+train/
+dev_images/
+prod_images/
+Preprocessed_images/
+Biruni_dataset/
+Biruni_Preprocessed/
+Notebooks/*.csv
+
+# macOS hidden files
 .DS_Store
-
-prod_images/*
-Preprocessed_images/*
-Notebooks/binary_classification.csv
-
-Biruni_Dataset-2.csv
-Biruni_Preprocessed/*
