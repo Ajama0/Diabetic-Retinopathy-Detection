@@ -45,6 +45,8 @@ The dataset consists of a zip file containing all training and testing examples.
 
 ## Exploratory Data analysis
 
+See ['data_exploration.ipynb'](./EDA/data_exploration.ipynb) for in depth of data exploration.
+
 35,126 images are present in the dataset. There are 5 severity gradings from No DR - Proliferative DR, No-dr has the highest prevalence with 73% of the dataset being healthy(No DR). To mitigate this we turned the study into a 2 class problem to handle the large imbalance. Data augmentation techniques seen in the following sections helped to improve generalizability. 
 
 Image below shows 2 sets of original training images across all severity gradings
