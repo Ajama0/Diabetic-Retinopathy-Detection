@@ -201,15 +201,15 @@ This project highlights how transfer learning and fine-tuning of deep learning m
 
 4 **Run Preprocessing Scripts**
 
-BEFORE running the script add a path in your root directory that Will store the output of ["preprocess_2.py"](./Scripts/preprocess_2.py)
+BEFORE running the script add a path in your root directory that Will store the output of ['preprocess_2.py'](./Scripts/preprocess_2.py)
 
 in the env file you should add 
 PREPROCESSED_IMAGES = "/yourpath"
 
 
 Run the following scripts locally:
-- ["preprocess_2.py"](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
-- ["convert_to_binary_classification.py"](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
+- ['preprocess_2.py'](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
+- ['convert_to_binary_classification.py'](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
 
 
 These scripts will generate:
@@ -229,8 +229,8 @@ Once preprocessing is complete, zip the entire project folder.
 
 
 **Run the Notebook**
-- Open the .ipynb file included in the project.
-- Set the Colab runtime to GPU (Runtime > Change runtime type > GPU).
+- Open the ['Fine-tune-pipeline.ipynb](./src/Models/Fine-tune-pipeline.ipynb) included in the project.
+- Set the Colab runtime to GPU (Runtime > Change runtime type > GPU). and choose the A100 GPU
 - Run all cells in order.
 
 
