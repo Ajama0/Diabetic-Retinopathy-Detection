@@ -92,7 +92,10 @@ The data augmentation used was
 
 
 After all the preprocessing steps, you should end up with a new dataset. 
-!["New-Dataset.png](New-Dataset.png)
+<p align="center">
+  <img src="New-Dataset.png" alt="New Dataset Preview" width="400"/>
+</p>
+
 
 
 
@@ -101,15 +104,23 @@ Three pretrained architectures were used preventing us from training the model f
 Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
 
 ### Model architectures
-Resnet50
-!["resnet50.png](resnet50.png)  
 
-Inceptionv3
-!["inceptionv3.png](inceptionv3.png) 
-
-DensetNet121
-!["densenet121.png](densenet121.png)
-
+<table>
+  <tr>
+    <td align="center">
+      <img src="resnet50.png" width="200"/><br/>
+      <strong>ResNet50</strong>
+    </td>
+    <td align="center">
+      <img src="inceptionv3.png" width="200"/><br/>
+      <strong>InceptionV3</strong>
+    </td>
+    <td align="center">
+      <img src="densenet121.png" width="200"/><br/>
+      <strong>DenseNet121</strong>
+    </td>
+  </tr>
+</table>
 
 
 
