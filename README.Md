@@ -25,11 +25,10 @@
    - [Loss Function](#loss-function)
    - [Optimizer and Scheduler](#optimizer-and-scheduler)
    - [Early Stopping and Checkpoints](#early-stopping-and-checkpoints)
-5. [Evaluation](#evaluation)
+5. [Results](#Results)
    - [Metrics Used](#metrics-used)
    - [Validation and Test Results](#validation-and-test-results)
    - [Confusion Matrix](#confusion-matrix)
-6. [Visualizations](#visualizations)
 7. [Challenges and Solutions](#challenges-and-solutions)
 8. [Conclusion](#conclusion)
 9. [Future Work](#future-work)
@@ -103,6 +102,8 @@ After all the preprocessing steps, you should end up with a new dataset.
 Three pretrained architectures were used preventing us from training the model from scratch with random weights and biases. 
 Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf"](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
 
+We trained these models using an A100 GPU provided by colab pro. 
+
 ### Model architectures
 
 <table>
@@ -129,13 +130,46 @@ Instead of training the model from scratch, we leveraged Transfer learning which
 
 Slight overview
 
-- ✅ Transfer Learning: Used pretrained weights from ImageNet to avoid training from scratch, which reduced training time and improved convergence.
-- 🎯 Domain Adaptation: Fine-tuned the pretrained models specifically for retinal image classification, adjusting parameters to our binary DR task.
-- 🧱 Multi-Stage Training:
+- Transfer Learning: Used pretrained weights from ImageNet to avoid training from scratch, which reduced training time and improved convergence.
+- Domain Adaptation: Fine-tuned the pretrained models specifically for retinal image classification, adjusting parameters to our binary DR task.
+- Multi-Stage Training:
 First stage: Trained only the classifier head to avoid disrupting pretrained feature representations.
 Second stage: Unfroze all layers and fine-tuned the entire network to adapt low-level features to our dataset.
-- 🔄 Architecture Adjustments: Added dropout layers and fully connected heads (except for InceptionV3 which already includes dropout) to improve generalization and reduce overfitting.
-- 🔍 Empirical Tuning: Found this strategy to outperform other methods through trial-and-error experiments.
+- Architecture Adjustments: Added dropout layers and fully connected heads (except for InceptionV3 which already includes dropout) to improve generalization and reduce overfitting.
+- Empirical Tuning: Found this strategy to outperform other methods through trial-and-error experiments.
+
+
+### Training Details
+we used a Train/val/test split of 70/15/15, this yielded into a 1:3 ratio between DR and No DR hence the large imbalance across severities were dramatically reduced. The 1:3 also has slight imbalance which was solved by using a weighted loss.
+The hyperparameters used and their corresponding values are found in the ["fine-tune-pipeline.ipynb](./src/Models/Fine-tune-pipeline.ipynb)
+
+## Loss Function
+Weighted Categorical Cross Entropy was used which allowed us to assign weights to the 2 classes.
+
+- Higher weight was given to the less dominant class (DR)
+- The higher weight meant a misclassification in any DR instance led to a larger loss, the network learns over time to place more importance on them. 
+
+## Optimizer and scheduler
+
+- ADAM optimizer
+- ReduceLROnPlatue scheduelr, after N epochs of no improvement, the LR is reduced by some factor in hope of finding a new MINIMA. 
+
+
+## Early Stopping
+Custom Early stopping was used with a patience of 10, This prevented overtraining and overfitting to the train set.
+
+
+### Results 
+
+
+
+
+
+
+
+
+
+
 
 
 
