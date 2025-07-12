@@ -14,11 +14,10 @@
 
 1. [Dataset](#dataset)
    - [Structure](#structure)
-   - [Preprocessing](#preprocessing)
 2. [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
    - [Class Distribution](#class-distribution)
-   - [Sample Images](#sample-images)
-   - [Observations](#observations)
+   - [Preprocessing](#preprocessing)
+   - [Data Augmentation](#data-augmentation)
 3. [Modeling Approach](#modeling-approach)
    - [Baseline Model](#baseline-model)
    - [Fine-Tuning Strategies](#fine-tuning-strategies)
@@ -49,3 +48,41 @@ All images were taken from patients and include both the left and right eye. Som
 ### Structure
 
 The dataset consists of a zip file containing all training and testing examples. However, due to the test set having private labels, we opted to only use the training images as our full dataset. The training folder contains 35,126 images with labels, which were used for training and evaluation in this study.
+
+## Exploratory Data analysis
+
+35,126 images are present in the dataset. There are 5 severity gradings from No DR - Proliferative DR, No-dr has the highest prevalence with 73% of the dataset being healthy(No DR). To mitigate this we turned the study into a 2 class problem to handle the large imbalance. Data augmentation techniques seen in the following sections helped to improve generalizability. 
+
+Image below shows 2 sets of original training images across all severity gradings
+
+!["original-images](original_images.png)
+
+
+
+### Class Distribution 
+![Class distribution](class-distribution.png)
+
+### Preprocessing
+
+
+As images contained large Black borders which contains irrelevant information that can alter the way a deep neural network extracts relevant information, we implemented a cropping algorithm with a threshold value which aims to only capture the retina from each image.
+Consistent sizing of the images were something the authors did not handle therefore images were scaled to ensure the network sees a consistent input. 
+
+The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. (See Paper for in depth reasoning). Black_images.py was ran however there were no fully black images in the original dataset. 
+
+
+1. Run [`preprocess_2.py`](./scripts/preprocess_2.py) on the original training images – output will be a directory of preprocessed images.  
+2. Run [`convert_to_binary_classification.py`](./scripts/convert_to_binary_classification.py) on the original CSV to transform all labels to either 0 or 1 (No DR vs DR).
+
+
+
+
+An single output image after preprocessing should look like the below
+
+!["Preprocessed-Image"](DR_preprocessed.png)
+
+
+
+
+
+
