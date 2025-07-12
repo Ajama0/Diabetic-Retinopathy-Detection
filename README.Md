@@ -154,8 +154,8 @@ Weighted Categorical Cross Entropy was used which allowed us to assign weights t
 - ReduceLROnPlatue scheduelr, after N epochs of no improvement, the LR is reduced by some factor in hope of finding a new minima. 
 
 
-## Early Stopping
-Custom Early stopping was used with a patience of 10, This prevented overtraining and overfitting to the train set.
+## Early Stopping and Checkpoints
+Custom Early stopping was used with a patience of 10, This prevented overtraining and overfitting to the train set. During training every N epochs we save the current model state, this is to prevent any state loss.
 
 
 ### Results 
