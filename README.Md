@@ -101,7 +101,7 @@ After all the preprocessing steps, you should end up with a new dataset.
 
 ## Modelling Approach
 Three pretrained architectures were used preventing us from training the model from scratch with random weights and biases. 
-Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
+Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf"](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
 
 ### Model architectures
 
@@ -126,6 +126,16 @@ Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modif
 
 ### Fine-Tuning Strategies
 Instead of training the model from scratch, we leveraged Transfer learning which allowed us to transfer the knowledge gained from one domain(image net) to ours. This meant the pretrained parameters were used however optimized for our Task at hand. All 3 networks underwent consistant modifications instead of Inception v3 which already contained a Dropout layer. Networks were trained using a multi-stage process in which the classifier head was trained for N epochs to prevent initial weight distortion then all layers were set to trainable. With trial and error of different methods, this yielded the best results.
+
+Slight overview
+
+- ✅ Transfer Learning: Used pretrained weights from ImageNet to avoid training from scratch, which reduced training time and improved convergence.
+- 🎯 Domain Adaptation: Fine-tuned the pretrained models specifically for retinal image classification, adjusting parameters to our binary DR task.
+- 🧱 Multi-Stage Training:
+First stage: Trained only the classifier head to avoid disrupting pretrained feature representations.
+Second stage: Unfroze all layers and fine-tuned the entire network to adapt low-level features to our dataset.
+- 🔄 Architecture Adjustments: Added dropout layers and fully connected heads (except for InceptionV3 which already includes dropout) to improve generalization and reduce overfitting.
+- 🔍 Empirical Tuning: Found this strategy to outperform other methods through trial-and-error experiments.
 
 
 
