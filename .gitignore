@@ -33,3 +33,7 @@ Notebooks/*.csv
 !class-distribution.png
 !DR_preprocessed.png
 !original_images.png
+!New-Dataset.png
+!densenet121.png
+!inceptionv3.png
+!resnet50.png

@@ -19,9 +19,8 @@
    - [Preprocessing](#preprocessing)
    - [Data Augmentation](#data-augmentation)
 3. [Modeling Approach](#modeling-approach)
-   - [Baseline Model](#baseline-model)
+   - [Model architectures](#model-architectures)
    - [Fine-Tuning Strategies](#fine-tuning-strategies)
-   - [Model Architectures](#model-architectures)
 4. [Training Details](#training-details)
    - [Loss Function](#loss-function)
    - [Optimizer and Scheduler](#optimizer-and-scheduler)
@@ -68,7 +67,7 @@ Image below shows 2 sets of original training images across all severity grading
 As images contained large Black borders which contains irrelevant information that can alter the way a deep neural network extracts relevant information, we implemented a cropping algorithm with a threshold value which aims to only capture the retina from each image.
 Consistent sizing of the images were something the authors did not handle therefore images were scaled to ensure the network sees a consistent input. 
 
-The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. (See Paper for in depth reasoning). Black_images.py was ran however there were no fully black images in the original dataset. 
+The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. See ['DR.pdf](./Paper/DR.pdf) for in depth reasoning.[`black_images.py`](./scripts/black_images.py)was ran however there were no fully black images in the original dataset. 
 
 
 1. Run [`preprocess_2.py`](./scripts/preprocess_2.py) on the original training images – output will be a directory of preprocessed images.  
@@ -80,6 +79,46 @@ The images provided by the authors were taken under poor lighting conditions whi
 An single output image after preprocessing should look like the below
 
 !["Preprocessed-Image"](DR_preprocessed.png)
+
+
+### Data Augmentation
+Online Data augmentation was used to allow the model to see variations of each image per EPOCH, this allows for better generalizability and essentially mitigates the problem of having to oversample and store more images on the hard disk. 
+
+The data augmentation used was 
+- Random Horizontal flio
+- Random Rotation
+- Random Vertical Flip
+- Standardization was done on the train set giving a mean of 0 and unit variance of 1
+
+
+After all the preprocessing steps, you should end up with a new dataset. 
+!["New-Dataset.png](New-Dataset.png)
+
+
+
+## Modelling Approach
+Three pretrained architectures were used preventing us from training the model from scratch with random weights and biases. 
+Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
+
+### Model architectures
+Resnet50
+!["resnet50.png](resnet50.png)  
+
+Inceptionv3
+!["inceptionv3.png](inceptionv3.png) 
+
+DensetNet121
+!["densenet121.png](densenet121.png)
+
+
+
+
+### Fine-Tuning Strategies
+Instead of training the model from scratch, we leveraged Transfer learning which allowed us to transfer the knowledge gained from one domain(image net) to ours. This meant the pretrained parameters were used however optimized for our Task at hand. All 3 networks underwent consistant modifications instead of Inception v3 which already contained a Dropout layer. Networks were trained using a multi-stage process in which the classifier head was trained for N epochs to prevent initial weight distortion then all layers were set to trainable. With trial and error of different methods, this yielded the best results.
+
+
+
+
 
 
 
