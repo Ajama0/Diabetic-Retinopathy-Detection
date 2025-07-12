@@ -28,3 +28,6 @@ Notebooks/*.csv
 
 # macOS hidden files
 .DS_Store
+
+
+!class-distribution.png
