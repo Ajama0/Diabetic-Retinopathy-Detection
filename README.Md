@@ -8,8 +8,12 @@ The motivations for this project :
 - Patients today often face delays in diagnosis due to limited access to specialists and time-consuming manual screening processes. Automated detection systems like the one proposed in this project can help accelerate diagnosis, reduce workload on medical professionals, and potentially improve early intervention outcomes.
 ## Table of contents 
 4. [Dataset](#dataset)
-    - [Source](#source)
+The dataset used in this project is known as the Eyepacs dataset provided by WILL CUKIERSK in the [2015 kaggle competition](https://www.kaggle.com/c/diabetic-retinopathy-detection). It contains high-resolution retinal images labeled by DR severity levels ranging from 0 (No DR) to 4 (Proliferative DR). 
+
+All images were taken from patients and includes both the left and right eye of the patient. High resolution images and images containing noise were captured, The steps taken in [preprocessing section ](#preprocessing show how i was able to solve this problem. 
+
     - [Structure](#structure)
+    The dataset consists of a zip file for all training examples and testing examples. Howvever due to the test set having private lables. We opted to only use the training images as our full dataset. The train folder consisted of 35,126 images that contained labelling, hence this was used as the dataset in the study.
     - [Preprocessing](#preprocessing)
 5. [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
     - [Class Distribution](#class-distribution)
