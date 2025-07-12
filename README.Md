@@ -64,7 +64,7 @@ Image below shows 2 sets of original training images across all severity grading
 As images contained large Black borders which contains irrelevant information that can alter the way a deep neural network extracts relevant information, we implemented a cropping algorithm with a threshold value which aims to only capture the retina from each image.
 Consistent sizing of the images were something the authors did not handle therefore images were scaled to ensure the network sees a consistent input. 
 
-The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. See ['DR.pdf](./Paper/DR.pdf) for in depth reasoning.[`black_images.py`](./Scripts/black_images.py)was ran however there were no fully black images in the original dataset. 
+The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. See [`DR.pdf`](./Paper/DR.pdf) for in depth reasoning.[`black_images.py`](./Scripts/black_images.py)was ran however there were no fully black images in the original dataset. 
 
 
 
@@ -76,7 +76,7 @@ The images provided by the authors were taken under poor lighting conditions whi
 
 An single output image after preprocessing should look like the below
 
-!["Preprocessed-Image"](DR_preprocessed.png)
+![`Preprocessed-Image`](DR_preprocessed.png)
 
 
 ### Data Augmentation
@@ -99,7 +99,7 @@ After all the preprocessing steps, you should end up with a new dataset.
 
 ## Modelling Approach
 Three pretrained architectures were used preventing us from training the model from scratch with random weights and biases. 
-Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The ["DR.pdf"](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
+Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The [`DR.pdf`](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
 
 We trained these models using an A100 GPU provided by colab pro. 
 
@@ -140,7 +140,7 @@ Second stage: Unfroze all layers and fine-tuned the entire network to adapt low-
 
 ### Training Details
 we used a Train/val/test split of 70/15/15, this yielded into a 1:3 ratio between DR and No DR hence the large imbalance across severities were dramatically reduced. The 1:3 also has slight imbalance which was solved by using a weighted loss.
-The hyperparameters used and their corresponding values are found in the ["fine-tune-pipeline.ipynb](./src/Models/Fine-tune-pipeline.ipynb)
+The hyperparameters used and their corresponding values are found in the [`fine-tune-pipeline.ipynb`](./src/Models/Fine-tune-pipeline.ipynb)
 
 ## Loss Function
 Weighted Categorical Cross Entropy was used which allowed us to assign weights to the 2 classes.
@@ -203,15 +203,15 @@ This project highlights how transfer learning and fine-tuning of deep learning m
 
 4 **Run Preprocessing Scripts**
 
-BEFORE running the script add a path in your root directory that Will store the output of ['preprocess_2.py'](./Scripts/preprocess_2.py)
+BEFORE running the script add a path in your root directory that Will store the output of [`preprocess_2.py`](./Scripts/preprocess_2.py)
 
 in the env file you should add 
 PREPROCESSED_IMAGES = "/yourpath"
 
 
 Run the following scripts locally:
-- ['preprocess_2.py'](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
-- ['convert_to_binary_classification.py'](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
+- [`preprocess_2.py`](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images  
+- [`convert_to_binary_classification.py`](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
 
 
 These scripts will generate:
@@ -231,7 +231,7 @@ Once preprocessing is complete, zip the entire project folder.
 
 
 **Run the Notebook**
-- Open the ['Fine-tune-pipeline.ipynb](./src/Models/Fine-tune-pipeline.ipynb) included in the project.
+- Open the [`Fine-tune-pipeline.ipynb`](./src/Models/Fine-tune-pipeline.ipynb) included in the project.
 - Set the Colab runtime to GPU (Runtime > Change runtime type > GPU). and choose the A100 GPU
 - Run all cells in order.
 
