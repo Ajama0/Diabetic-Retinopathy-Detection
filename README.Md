@@ -62,11 +62,12 @@ Image below shows 2 sets of original training images across all severity grading
 As images contained large Black borders which contains irrelevant information that can alter the way a deep neural network extracts relevant information, we implemented a cropping algorithm with a threshold value which aims to only capture the retina from each image.
 Consistent sizing of the images were something the authors did not handle therefore images were scaled to ensure the network sees a consistent input. 
 
-The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. See ['DR.pdf](./Paper/DR.pdf) for in depth reasoning.[`black_images.py`](./scripts/black_images.py)was ran however there were no fully black images in the original dataset. 
+The images provided by the authors were taken under poor lighting conditions which made the blood vessels and other symptoms of DR difficult to notice. High boost filtering was used to enhance the contrast of retinal images, making subtle features such as microaneurysms, hemorrhages, and blood vessels more prominent for improved detection. See ['DR.pdf](./Paper/DR.pdf) for in depth reasoning.[`black_images.py`](./Scripts/black_images.py)was ran however there were no fully black images in the original dataset. 
 
 
-1. Run [`preprocess_2.py`](./scripts/preprocess_2.py) on the original training images – output will be a directory of preprocessed images.  
-2. Run [`convert_to_binary_classification.py`](./scripts/convert_to_binary_classification.py) on the original CSV to transform all labels to either 0 or 1 (No DR vs DR).
+
+1. Run [`preprocess_2.py`](./Scripts/preprocess_2.py) on the original training images – output will be a directory of preprocessed images.  
+2. Run [`convert_to_binary_classification.py`](./Scripts/convert_to_binary_classification.py) on the original CSV to transform all labels to either 0 or 1 (No DR vs DR).
 
 
 
@@ -200,20 +201,20 @@ This project highlights how transfer learning and fine-tuning of deep learning m
 
 4 **Run Preprocessing Scripts**
 
-BEFORE running the script add a path in your root directory that Will store the output of !["preprocess_2.py"](./Scripts/preprocess_2.py)
+BEFORE running the script add a path in your root directory that Will store the output of ["preprocess_2.py"](./Scripts/preprocess_2.py)
 
 in the env file you should add 
 PREPROCESSED_IMAGES = "/yourpath"
 
 
 Run the following scripts locally:
-- !["preprocess_2.py"](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
-- !["convert_to_binary_classification.py"](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
+- ["preprocess_2.py"](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
+- ["convert_to_binary_classification.py"](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
 
 
 These scripts will generate:
-A new folder: Preprocessed_images/
-A new CSV file: binary_classification.csv
+- A new folder: Preprocessed_images/
+- A new CSV file: binary_classification.csv
 
 
 **Zip the Project**
