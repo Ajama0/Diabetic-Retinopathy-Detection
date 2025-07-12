@@ -63,10 +63,8 @@ def process_single_image(image_path, scale):
 
 
 def crop_image(img, tolerance):
-
     if img.dtype != np.uint8:
         img = np.clip(img, 0, 255).astype(np.uint8)
-
 
     flag_images = []
     """
@@ -83,9 +81,6 @@ def crop_image(img, tolerance):
         mask = img > tolerance
         #return the index values and return the cropped image
         return img[np.ix_(mask.any(1), mask.any(0))]
-    
-        
-        
 
     elif img.ndim == 3:
         #print("im here")
@@ -110,23 +105,19 @@ def crop_image(img, tolerance):
             #print(img_c1.shape,img_c2.shape,img_c3.shape)
             img = np.stack([img_c1,img_c2,img_c3],axis=-1)
             #print(img.shape)
-
             return img
 
 
 if __name__ == "__main__":
     load_dotenv()
 
-    BIRUNI = True
-    if BIRUNI:
-        labels_csv = os.getenv("BIRUNI_LABELS_PATH")
-        images = os.getenv("BIRUNI_IMAGES_PATH")
-        output_dirs = os.getenv("BIRUNI_PREPROCESSED_IMAGES")
-    
-    else:
-        labels_csv = os.getenv("DR_LABELS_PATH")
-        images = os.getenv("DR_IMAGES_PATH")
-        output_dirs = os.getenv("PREPROCESSED_IMAGES")
+    # Load your own environment variables for the EYEPACS dataset
+    labels_csv = os.getenv("DR_LABELS_PATH") #this is the csv file containing the image names and labels
+    images = os.getenv("DR_IMAGES_PATH") #this is the directory containing the images
+
+    #add your own output directory
+    #this is the directory where the preprocessed images will be saved
+    output_dirs = os.getenv("PREPROCESSED_IMAGES")
 
 
 
