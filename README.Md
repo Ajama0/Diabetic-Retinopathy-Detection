@@ -26,14 +26,10 @@
    - [Optimizer and Scheduler](#optimizer-and-scheduler)
    - [Early Stopping and Checkpoints](#early-stopping-and-checkpoints)
 5. [Results](#Results)
-   - [Metrics Used](#metrics-used)
-   - [Validation and Test Results](#validation-and-test-results)
-   - [Confusion Matrix](#confusion-matrix)
-7. [Challenges and Solutions](#challenges-and-solutions)
-8. [Conclusion](#conclusion)
-9. [Future Work](#future-work)
-10. [How to Run the Project](#how-to-run-the-project)
-11. [References](#references)
+6. [Conclusion](#conclusion)
+7. [Future Work](#future-work)
+8. [How to Run the Project](#how-to-run-the-project)
+
 
 ---
 
@@ -100,7 +96,7 @@ After all the preprocessing steps, you should end up with a new dataset.
 
 ## Modelling Approach
 Three pretrained architectures were used preventing us from training the model from scratch with random weights and biases. 
-Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The !["DR.pdf"](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
+Inception v3, ResNet50 and DenseNet121 were used, all 3 architectures were modified in which Dropout layers, Activation functions and a Classifier layer were added, This was added to the improve generalizability and also map the feature maps to our 2 classes. The ["DR.pdf"](./Paper/DR.pdf) goes in depth explaining the reasoning for these modifications and the parameters used. 
 
 We trained these models using an A100 GPU provided by colab pro. 
 
@@ -152,7 +148,7 @@ Weighted Categorical Cross Entropy was used which allowed us to assign weights t
 ## Optimizer and scheduler
 
 - ADAM optimizer
-- ReduceLROnPlatue scheduelr, after N epochs of no improvement, the LR is reduced by some factor in hope of finding a new MINIMA. 
+- ReduceLROnPlatue scheduelr, after N epochs of no improvement, the LR is reduced by some factor in hope of finding a new minima. 
 
 
 ## Early Stopping
@@ -160,20 +156,85 @@ Custom Early stopping was used with a patience of 10, This prevented overtrainin
 
 
 ### Results 
+ DenseNet121 slightly outperformed the others with an accuracy of 89% and the highest AUC score of 0.8694, indicating stronger overall classification performance.
+
+ ## Validation and Test Results
+
+| Model        | Accuracy (%) |   AUC   | Precision (DR) | Recall (DR) |
+|--------------|---------------|--------|----------------|-------------|
+| ResNet50     | 88            | 0.8591 | 0.77           | 0.80        |
+| InceptionV3  | 88            | 0.8550 | 0.77           | 0.80        |
+| DenseNet121  | 89            | 0.8694 | 0.78           | 0.82        |
+
+
+
+
+## Conclusion
+This project highlights how transfer learning and fine-tuning of deep learning models can effectively detect Diabetic Retinopathy from retinal images. DenseNet121 achieved the best overall performance, demonstrating the value of combining robust preprocessing with pretrained architectures.
+
+
+
+## Future Work
+- Extend to multi-class classification for detailed DR grading
+- Add explainability tools like Grad-CAM for visual insights
+- Evaluate on external clinical datasets for better generalization
+- Deploy as a simple web application for practical use
+
+
+
+## How to run the project 
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Ajama0/Diabetic-Retinopathy-Detection.git
+
+
+2- **Download the Dataset**
+- Go to the [2015 Kaggle competition](https://www.kaggle.com/c/diabetic-retinopathy-detection)
+- Download the train folder and trainLabels.csv.
+- Place both in the root directory of the cloned project.
+
+3 - **Create a .env file in the project root with the following contents:**
+- DR_IMAGES_PATH =./train
+- DR_LABELS_PATH=./trainLabels.csv
+
+
+4 **Run Preprocessing Scripts**
+
+BEFORE running the script add a path in your root directory that Will store the output of !["preprocess_2.py"](./Scripts/preprocess_2.py)
+
+in the env file you should add 
+PREPROCESSED_IMAGES = "/yourpath"
+
+
+Run the following scripts locally:
+- !["preprocess_2.py"](./Scripts/preprocess_2.py) – cleans and preprocesses the raw images
+- !["convert_to_binary_classification.py"](./Scripts/convert_to_binary_classification.py) – converts DR grades into binary labels (0 = No DR, 1 = DR)
+
+
+These scripts will generate:
+A new folder: Preprocessed_images/
+A new CSV file: binary_classification.csv
+
+
+**Zip the Project**
+Once preprocessing is complete, zip the entire project folder.
+- Ensure that Preprocessed_images/ and binary_classification.csv are included.
+- You do not need to include the original train folder or trainLabels.csv.
+- Upload to Google Colab
+- Upload the zipped project to your Google Drive.
 
 
 
 
 
+**Run the Notebook**
+- Open the .ipynb file included in the project.
+- Set the Colab runtime to GPU (Runtime > Change runtime type > GPU).
+- Run all cells in order.
 
 
-
-
-
-
-
-
-
+**Model Outputs**
+The best model weights for each architecture (ResNet50, InceptionV3, DenseNet121) will be automatically saved to your Google Drive during training.
 
 
 
