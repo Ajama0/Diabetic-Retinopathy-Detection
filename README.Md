@@ -1,4 +1,4 @@
-## A Comparative Study on Multi-Stage Fine-Tuning Approaches for Diabetic Retinopathy Detection
+## A Comparative Study on Multi-Stage Fine-Tuning for Diabetic Retinopathy Detection
 
 **Diabetic Retinopathy (DR)** is the leading cause of preventable blindness and is projected to affect up to 700 million people by 2045. Diabetic retinopathy is a complication of diabetes mellitus that affects the blood vessels of the retina. If left undetected, it can lead to vision impairment or even blindness. Early diagnosis is crucial, and deep learning models have shown promise in assisting automated detection from retinal images. This project explores a deep learning approach to enable early and accurate detection.
 
